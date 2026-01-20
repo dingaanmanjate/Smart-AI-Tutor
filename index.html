@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPECTRUM AI Tutor</title>
+    <link rel="icon" type="image/png" href="penup_20250719_132735.jpg">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="auth-container">
+        <!-- Header / Role Selection -->
+        <h2 id="view-title">Welcome Back</h2>
+
+        <div class="role-selector">
+            <button id="role-learner" class="role-btn active" onclick="setRole('learner')">Learner</button>
+            <button id="role-tutor" class="role-btn" onclick="setRole('tutor')">Tutor</button>
+        </div>
+
+        <!-- Login View (Default) -->
+        <div id="login-view">
+            <input type="email" id="login-email" placeholder="Email">
+            <input type="password" id="login-password" placeholder="Password">
+            <button class="primary-btn" onclick="handleLogin()">Sign In</button>
+
+            <div id="signup-prompt">
+                <p class="toggle-line">New here? <a href="#" onclick="showSignupView(event)">Create Account</a></p>
+            </div>
+            <div id="tutor-prompt" style="display:none;">
+                <p class="toggle-line">Contact admin.</p>
+            </div>
+        </div>
+
+        <!-- Signup View (Learner Only) -->
+        <div id="signup-view" style="display:none;">
+            <input type="email" id="signup-email" placeholder="Email">
+            <input type="password" id="signup-password" placeholder="Password">
+            <!-- Job title is implied as 'Learner' for this form -->
+            <button class="primary-btn" onclick="handleSignUp()">Create Learner Account</button>
+            <p class="toggle-line">Already have an account? <a href="#" onclick="showLoginView(event)">Sign In</a></p>
+        </div>
+
+        <!-- Verification View (Newly Added) -->
+        <div id="verify-view" style="display:none;">
+            <p>Verification code sent to your email.</p>
+            <input type="text" id="verify-code" placeholder="6-digit code">
+            <button class="primary-btn" onclick="handleVerify()">Confirm Email</button>
+            <p class="toggle-line"><a href="#" onclick="showLoginView(event)">Back to Login</a></p>
+        </div>
+
+        <div id="mfa-view" style="display:none;">
+            <h2>Setup MFA</h2>
+            <p>Enter this code in your Authenticator app:</p>
+            <strong id="mfa-secret"></strong>
+            <input type="text" id="mfa-code" placeholder="6-digit code">
+            <button class="primary-btn" onclick="confirmMFA()">Verify</button>
+        </div>
+    </div>
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.7/dist/amazon-cognito-identity.min.js"></script>
+    <script src="auth.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

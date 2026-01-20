@@ -1,0 +1,238 @@
+import os
+import json
+import asyncio
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+import google.generativeai as genai
+from mangum import Mangum
+import boto3
+
+# --- Lazy Configuration ---
+GEMINI_CONFIGURED = False
+
+# AWS Services
+dynamodb = boto3.resource('dynamodb')
+lesson_table = dynamodb.Table('Lessons')
+
+def ensure_config():
+    global GEMINI_CONFIGURED
+    if not GEMINI_CONFIGURED:
+        param_name = os.environ.get("SSM_PARAMETER_NAME", "/smart-ai-tutor/gemini-api-key")
+        try:
+            ssm = boto3.client('ssm')
+            response = ssm.get_parameter(Name=param_name, WithDecryption=True)
+            key = response['Parameter']['Value']
+            genai.configure(api_key=key)
+            GEMINI_CONFIGURED = True
+            print("INFO: Gemini Configured Successfully.")
+        except Exception as e:
+            print(f"ERROR: Failed to configure Gemini. {e}")
+            raise e
+
+app = FastAPI()
+
+# Enable CORS
+# CORS is handled by AWS Lambda Function URL configuration
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"], 
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
+@app.get("/")
+async def root():
+    return {"status": "ok", "message": "Gemini Streaming API is live"}
+
+# --- Memory-Efficient Session Handling ---
+sessions = {}
+
+def get_chat_session(session_id: str, history=None):
+    ensure_config()
+    if session_id not in sessions:
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        formatted_history = history or []
+        sessions[session_id] = model.start_chat(history=formatted_history)
+    return sessions[session_id]
+
+@app.post("/chat-stream")
+async def chat_stream(request: Request):
+    try:
+        data = await request.json()
+        user_message = data.get("message")
+        lesson_id = data.get("lesson_id")
+        
+        if not user_message or not lesson_id:
+            raise HTTPException(status_code=400, detail="message and lesson_id are required")
+
+        # Persistence: Solve the 'Amnesia' failure
+        db_history = []
+        if lesson_id not in sessions:
+            res = lesson_table.get_item(Key={'lessonId': lesson_id})
+            item = res.get('Item', {})
+            raw_history = item.get('history', [])
+            for h in raw_history:
+                role = 'user' if h['role'] == 'user' else 'model'
+                db_history.append({'role': role, 'parts': [h['content']]})
+
+        chat = get_chat_session(lesson_id, history=db_history)
+        
+        message_parts = [user_message]
+        image_data = data.get("image")
+        if image_data:
+            import base64
+            if "," in image_data:
+                image_data = image_data.split(",")[1]
+            
+            message_parts.append({
+                "mime_type": "image/jpeg",
+                "data": base64.b64decode(image_data)
+            })
+
+        async def generate():
+            try:
+                # 1. Connection established probe
+                yield f"data: {json.dumps({'text': 'Reflecting...'})}\n\n"
+                await asyncio.sleep(0.1)
+
+                # Gemini 1.5 Flash supports streaming
+                response = chat.send_message(message_parts, stream=True)
+                for chunk in response:
+                    try:
+                        if chunk.text:
+                            full_response = "" # Reset for accumulation if needed, but here we just stream
+                            yield f"data: {json.dumps({'text': chunk.text})}\n\n"
+                            await asyncio.sleep(0.01) # Small buffer
+                    except ValueError:
+                        # Safety filter blocked this chunk
+                        msg = " [Content Blocked by Safety Filters] "
+                        yield f"data: {json.dumps({'text': msg})}\n\n"
+                
+                # Sync back to DynamoDB (Best effort)
+                try:
+                    new_mats = [
+                        {'role': 'user', 'content': user_message + (" [Image Attached]" if image_data else "")},
+                        {'role': 'ai', 'content': "Response saved"} # Simplified for now
+                    ]
+                    lesson_table.update_item(
+                        Key={'lessonId': lesson_id},
+                        UpdateExpression="SET history = list_append(if_not_exists(history, :empty), :m)",
+                        ExpressionAttributeValues={':m': new_mats, ':empty': []}
+                    )
+                except Exception as db_err:
+                     print(f"DB Error: {db_err}")
+
+                yield "data: [DONE]\n\n"
+
+            except Exception as e:
+                print(f"Stream Critical Error: {e}")
+                import traceback
+                trace = traceback.format_exc()
+                
+                # Probe available models
+                model_list_str = "Could not list models."
+                try:
+                    models = []
+                    for m in genai.list_models():
+                        if 'generateContent' in m.supported_generation_methods:
+                            models.append(m.name)
+                    model_list_str = "\\n".join(models)
+                except Exception as list_err:
+                    model_list_str = f"List failed: {list_err}"
+
+                # Yield the actual error to the client for debugging
+                yield f"data: {json.dumps({'text': f' [Error: {str(e)}] \\n\\n--- AVAILABLE MODELS ---\\n{model_list_str}'})}\n\n"
+                yield f"data: {json.dumps({'debug': trace})}\n\n"
+
+        return StreamingResponse(generate(), media_type="text/event-stream")
+    except Exception as e:
+        print(f"API Error: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.post("/generate-quiz")
+async def generate_quiz(request: Request):
+    ensure_config()
+    try:
+        data = await request.json()
+        lesson_id = data.get("lesson_id")
+        
+        res = lesson_table.get_item(Key={'lessonId': lesson_id})
+        item = res.get('Item', {})
+        history = item.get('history', [])
+        
+        context = "\n".join([f"{h['role']}: {h['content']}" for h in history])
+        
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        prompt = f"""
+        Based on the following lesson conversation, generate a 5-question multiple choice quiz.
+        Return ONLY a JSON array of objects with the following structure:
+        {{
+            "id": "q1",
+            "question": "...",
+            "options": ["...", "...", "...", "..."],
+            "correctAnswer": 0
+        }}
+        
+        Context:
+        {context}
+        """
+        
+        response = model.generate_content(prompt)
+        json_text = response.text.strip()
+        if json_text.startswith("```json"):
+            json_text = json_text[7:-3].strip()
+        elif json_text.startswith("```"):
+            json_text = json_text[3:-3].strip()
+            
+        quiz = json.loads(json_text)
+        return {"quiz": quiz}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.post("/grade-quiz")
+async def grade_quiz(request: Request):
+    ensure_config()
+    try:
+        data = await request.json()
+        lesson_id = data.get("lesson_id")
+        answers = data.get("answers")
+        quiz = data.get("quiz")
+        
+        model = genai.GenerativeModel('gemini-3.0-flash')
+        prompt = f"""
+        Grade this quiz attempt.
+        Original Quiz: {json.dumps(quiz)}
+        User Answers: {json.dumps(answers)}
+        
+        Return a JSON object:
+        {{
+            "score": number (0-100),
+            "feedback": "...",
+            "detailedAnalysis": "..."
+        }}
+        """
+        
+        response = model.generate_content(prompt)
+        json_text = response.text.strip()
+        if json_text.startswith("```json"):
+            json_text = json_text[7:-3].strip()
+        
+        result = json.loads(json_text)
+        
+        lesson_table.update_item(
+            Key={'lessonId': lesson_id},
+            UpdateExpression="SET quizScore = :s, quizResult = :r",
+            ExpressionAttributeValues={
+                ':s': result['score'],
+                ':r': result
+            }
+        )
+        
+        return result
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+# Bridge for AWS Lambda
+handler = Mangum(app, lifespan="off")

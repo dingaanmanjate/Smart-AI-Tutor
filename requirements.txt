@@ -1,0 +1,6 @@
+fastapi
+google-generativeai
+mangum
+uvicorn
+python-multipart
+# boto3 is included in AWS Lambda runtime

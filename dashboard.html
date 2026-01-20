@@ -1,0 +1,150 @@
+<!-- Mobile Header -->
+<header class="mobile-header">
+    <h2 id="mobile-name">Learner</h2>
+    <button class="logout-btn-mini" onclick="handleLogout()">Logout</button>
+</header>
+
+<div class="dashboard-wrapper">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2 id="sidebar-name">Learner</h2>
+        </div>
+
+        <div class="sidebar-subjects-header">
+            <h4 class="form-group label" style="margin: 0;">ENROLLED SUBJECTS</h4>
+            <button class="add-subj-btn-mini" onclick="toggleSubjectForm()" title="Add Subject">+</button>
+        </div>
+        <div class="sidebar-subjects">
+            <ul id="my-subjects-list" style="padding:0; margin:0;"></ul>
+        </div>
+
+        <button class="logout-btn" onclick="handleLogout()">Logout</button>
+    </aside>
+
+    <main class="main-dashboard">
+        <!-- Dashboard Content Grid -->
+        <div class="top-row">
+            <!-- Profile Card -->
+            <div class="profile-card-new">
+                <div class="profile-img-container">
+                    <img src="penup_20250719_132735.jpg" alt="Learner Profile">
+                </div>
+                <div class="profile-info">
+                    <h1 id="prof-full-name">Name Surname</h1>
+                    <p id="prof-curriculum">Curriculum</p>
+                    <p id="prof-grade">Grade</p>
+                    <p class="profile-quote">"The future belongs in those who believe in the beauty of their dreams."
+                    </p>
+                </div>
+            </div>
+
+            <!-- Dashboard Control Quick Cards -->
+            <div class="sub-cards-grid" id="critical-cards-grid">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Hidden Enrollment Card -->
+        <div id="subject-selection-area" style="display:none; margin-bottom: 30px;" class="stats-card">
+            <h3>Enroll in a New Subject</h3>
+            <p>Your Curriculum: <strong id="display-curriculum" style="color: var(--text-main);"></strong></p>
+            <div class="form-group" style="margin-top:15px;">
+                <select id="subj-select"></select>
+            </div>
+            <div style="display: flex; gap: 15px;">
+                <button class="primary-btn" id="enroll-btn" style="flex:1;">Confirm Enrollment</button>
+                <button class="logout-btn" onclick="toggleSubjectForm()" style="flex:1; margin:0;">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Conditional Profile Setup Form -->
+        <div id="profile-setup-card" style="display: none; margin-bottom: 30px;" class="stats-card">
+            <h3 style="margin-bottom: 25px;">Complete Your Profile</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label>First Name</label>
+                    <input type="text" id="p-name" placeholder="Enter first name">
+                </div>
+                <div class="form-group">
+                    <label>Surname</label>
+                    <input type="text" id="p-surname" placeholder="Enter surname">
+                </div>
+                <div class="form-group">
+                    <label>Grade</label>
+                    <select id="p-grade">
+                        <option value="8">Grade 8</option>
+                        <option value="9">Grade 9</option>
+                        <option value="10">Grade 10</option>
+                        <option value="11">Grade 11</option>
+                        <option value="12">Grade 12</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Curriculum</label>
+                    <select id="p-curriculum" onchange="loadSubjects()">
+                        <option value="CAPS">CAPS</option>
+                        <option value="IEB">IEB</option>
+                        <option value="Cambridge">Cambridge</option>
+                    </select>
+                </div>
+            </div>
+            <button class="primary-btn" id="save-profile-btn" style="width: 100%; margin-top: 20px;">Save Profile
+                Information</button>
+        </div>
+
+        <!-- Visual Stats Grid -->
+        <div class="bottom-grid">
+            <div class="stats-card">
+                <h3>Weekly Progress</h3>
+                <div class="chart-bars">
+                    <div class="bar" style="height: 40%;"></div>
+                    <div class="bar" style="height: 70%;"></div>
+                    <div class="bar" style="height: 55%;"></div>
+                    <div class="bar" style="height: 90%;"></div>
+                    <div class="bar" style="height: 60%;"></div>
+                    <div class="bar" style="height: 80%;"></div>
+                    <div class="bar" style="height: 65%;"></div>
+                </div>
+                <div
+                    style="display:flex; justify-content: space-around; font-size: 0.8rem; margin-top: 20px; color: var(--text-dim);">
+                    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                </div>
+            </div>
+            <div class="stats-card">
+                <h3>Study Schedule</h3>
+                <div
+                    style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; height: 160px; padding-top: 10px;">
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--text-main); border: 1px solid var(--border-main);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                    <div style="background: var(--bg-pure); border: 1px solid var(--border-subtle);"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Mobile Footer -->
+<footer class="mobile-footer">
+    <button class="add-subj-btn-mini" onclick="toggleSubjectForm()">+</button>
+    <div class="mobile-subjects-bar">
+        <ul id="mobile-subjects-list"></ul>
+    </div>
+</footer>
