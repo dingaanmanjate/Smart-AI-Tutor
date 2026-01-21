@@ -64,3 +64,103 @@ resource "aws_dynamodb_table" "lessons" {
     Environment = "production"
   }
 }
+
+# =============================================================================
+# ATP CURRICULUM TABLES
+# =============================================================================
+
+resource "aws_dynamodb_table" "curriculum" {
+  name           = "Curriculum"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "curriculumId"
+
+  attribute {
+    name = "curriculumId"
+    type = "S"
+  }
+
+  attribute {
+    name = "subjectName"
+    type = "S"
+  }
+
+  attribute {
+    name = "grade"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name               = "SubjectGradeIndex"
+    hash_key           = "subjectName"
+    range_key          = "grade"
+    projection_type    = "ALL"
+  }
+
+  tags = {
+    Environment = "production"
+  }
+}
+
+resource "aws_dynamodb_table" "topics" {
+  name           = "Topics"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "topicId"
+
+  attribute {
+    name = "topicId"
+    type = "S"
+  }
+
+  attribute {
+    name = "curriculumId"
+    type = "S"
+  }
+
+  attribute {
+    name = "term"
+    type = "N"
+  }
+
+  global_secondary_index {
+    name               = "CurriculumTermIndex"
+    hash_key           = "curriculumId"
+    range_key          = "term"
+    projection_type    = "ALL"
+  }
+
+  tags = {
+    Environment = "production"
+  }
+}
+
+resource "aws_dynamodb_table" "subtopics" {
+  name           = "Subtopics"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "subtopicId"
+
+  attribute {
+    name = "subtopicId"
+    type = "S"
+  }
+
+  attribute {
+    name = "topicId"
+    type = "S"
+  }
+
+  attribute {
+    name = "orderIndex"
+    type = "N"
+  }
+
+  global_secondary_index {
+    name               = "TopicOrderIndex"
+    hash_key           = "topicId"
+    range_key          = "orderIndex"
+    projection_type    = "ALL"
+  }
+
+  tags = {
+    Environment = "production"
+  }
+}
