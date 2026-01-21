@@ -15,6 +15,10 @@ user_table = dynamodb.Table('UserProfiles')
 subject_table = dynamodb.Table('Subjects')
 lesson_table = dynamodb.Table('Lessons')
 
+# ATP Curriculum Tables
+curriculum_table = dynamodb.Table('Curriculum')
+topics_table = dynamodb.Table('Topics')
+
 def lambda_handler(event, context):
     method = str(event.get('httpMethod', '')).upper()
     path = str(event.get('path', '')).lower()
@@ -60,6 +64,35 @@ def lambda_handler(event, context):
         subj = query_params.get('subjectName')
         response = subject_table.get_item(Key={'curriculum': curr, 'subjectName': subj})
         return build_response(200, response.get('Item', {}))
+
+    # GET ATP Curriculum Subjects by Grade
+    elif method == 'GET' and (path.endswith('/curriculum') or path == 'curriculum'):
+        grade = query_params.get('grade')
+        if not grade:
+            return build_response(400, {"error": "grade parameter required"})
+        
+        # Query curriculum table by grade using GSI
+        response = curriculum_table.query(
+            IndexName='SubjectGradeIndex',
+            KeyConditionExpression=boto3.dynamodb.conditions.Key('grade').eq(grade)
+        )
+        return build_response(200, response.get('Items', []))
+
+    # GET ATP Topics by Curriculum ID
+    elif method == 'GET' and (path.endswith('/curriculum/topics') or '/curriculum/topics' in path):
+        curriculum_id = query_params.get('curriculumId')
+        if not curriculum_id:
+            return build_response(400, {"error": "curriculumId parameter required"})
+        
+        # Query topics table by curriculum using GSI
+        response = topics_table.query(
+            IndexName='CurriculumTermIndex',
+            KeyConditionExpression=boto3.dynamodb.conditions.Key('curriculumId').eq(curriculum_id)
+        )
+        # Sort by term then orderIndex
+        items = response.get('Items', [])
+        items.sort(key=lambda x: (int(x.get('term', 0)), int(x.get('orderIndex', 0))))
+        return build_response(200, items)
 
     # ADD Topic
     elif method == 'POST' and (path.endswith('/topics') or path == 'topics'):
@@ -167,13 +200,47 @@ def lambda_handler(event, context):
         body = json.loads(event.get('body', '{}'))
         
         if path.endswith('/start'):
+            topic_id = body.get('topicId')
+            subject_name = body.get('subjectName')
+            grade = body.get('grade', '')
+            
+            # Fetch ATP context for this topic
+            topic_context = ""
+            topic_name = topic_id  # Default to ID if not found
+            try:
+                topic_resp = topics_table.get_item(Key={'topicId': topic_id})
+                topic_data = topic_resp.get('Item', {})
+                topic_name = topic_data.get('topicName', topic_id)
+                topic_context = topic_data.get('context', '')
+            except Exception as e:
+                print(f"Warning: Could not fetch topic context: {e}")
+            
+            # Generate context-aware welcome message
+            welcome_msg = f"""Welcome to your **{topic_name}** lesson! 📚
+
+I'm your AI tutor, and today we'll be exploring this topic together as part of the CAPS {subject_name} curriculum{f' for Grade {grade}' if grade else ''}.
+
+**Learning Objectives:**
+• Understand the key concepts of {topic_name}
+• Apply this knowledge to solve problems
+• Connect this topic to related concepts
+
+Before we begin, tell me:
+- What do you already know about {topic_name}?
+- Is there a specific aspect you'd like to focus on?
+
+Let's get started! 🎓"""
+            
             lesson = {
                 'lessonId': f"L_{os.urandom(4).hex()}",
                 'email': body.get('email'),
-                'topicId': body.get('topicId'),
-                'subjectName': body.get('subjectName'),
+                'topicId': topic_id,
+                'topicName': topic_name,
+                'subjectName': subject_name,
+                'grade': grade,
+                'topicContext': topic_context,
                 'status': 'teaching',
-                'history': [{'role': 'ai', 'content': "Hello! I'm your AI tutor. Let's explore this topic together. What do you already know about it?"}]
+                'history': [{'role': 'ai', 'content': welcome_msg}]
             }
             lesson_table.put_item(Item=lesson)
             return build_response(200, lesson)

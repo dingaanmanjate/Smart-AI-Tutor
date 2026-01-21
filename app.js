@@ -273,8 +273,13 @@ window.openSubjectPortal = async function (subjectName) {
         btn.classList.toggle('active', btn.innerText === subjectName);
     });
 
-    // 2. Fetch Detailed Subject Data (ATP Topics)
-    const curriculum = currentProfile.curriculum || "N/A";
+    // 2. Get grade and build curriculumId
+    const curriculum = currentProfile.curriculum || "CAPS";
+    const grade = currentProfile.grade || "10";
+
+    // Build curriculumId matching our ATP data format
+    const subjectSlug = subjectName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const curriculumId = `${subjectSlug}-grade${grade}-2023`;
 
     mainArea.innerHTML = `<div style="padding: 40px; text-align: center;"><h2>Loading ${subjectName} ATP...</h2></div>`;
 
@@ -283,15 +288,14 @@ window.openSubjectPortal = async function (subjectName) {
         const footer = document.querySelector('.mobile-footer');
         if (footer) footer.classList.remove('hidden');
 
-        // Load template and data in parallel
-        const [templateResp, dataResp] = await Promise.all([
+        // Load template and ATP topics in parallel
+        const [templateResp, topicsResp] = await Promise.all([
             fetch('/subject-portal.html'),
-            fetch(`${API_BASE}/subject-details?curriculum=${encodeURIComponent(curriculum)}&subjectName=${encodeURIComponent(subjectName)}`)
+            fetch(`${API_BASE}/curriculum/topics?curriculumId=${encodeURIComponent(curriculumId)}`)
         ]);
 
         const templateHtml = await templateResp.text();
-        const subjectData = await dataResp.json();
-        const topics = subjectData.topics || [];
+        const topics = await topicsResp.json();
 
         // Inject template
         mainArea.innerHTML = templateHtml;
@@ -299,86 +303,58 @@ window.openSubjectPortal = async function (subjectName) {
         // Populate dynamic content
         document.getElementById('portal-subject-name').innerText = `${subjectName} Portal`;
         document.getElementById('portal-curriculum').innerText = `Curriculum: ${curriculum}`;
-        document.getElementById('add-topic-title').innerText = `Add Topic to ${subjectName}`;
-
-        // Attach save topic handler
-        document.getElementById('save-topic-btn').onclick = () => saveTopic(curriculum, subjectName);
+        document.getElementById('portal-grade').innerText = `Grade: ${grade}`;
 
         // Group topics by term and render
-        const terms = { "Term 1": [], "Term 2": [], "Term 3": [], "Term 4": [] };
+        const terms = { 1: [], 2: [], 3: [], 4: [] };
         topics.forEach(t => {
-            if (terms[t.term]) terms[t.term].push(t);
+            const term = parseInt(t.term) || 1;
+            if (terms[term]) terms[term].push(t);
         });
 
         const atpContainer = document.getElementById('atp-terms-container');
-        atpContainer.innerHTML = Object.entries(terms).map(([term, termTopics]) => `
+        atpContainer.innerHTML = Object.entries(terms).map(([termNum, termTopics]) => `
             <div class="atp-item">
-                <span class="term">${term}</span>
+                <span class="term">Term ${termNum}</span>
                 <div style="flex: 1;">
                     ${termTopics.length > 0 ? termTopics.map(t => `
-                        <div class="topic-entry" onclick="interactWithTopic('${t.id}')" style="cursor:pointer; margin-bottom: 15px;">
+                        <div class="topic-entry" onclick="startATPLesson('${t.topicId}', '${t.topicName.replace(/'/g, "\\'")}', '${subjectName}')" style="cursor:pointer; margin-bottom: 15px; padding: 10px; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
                             <strong style="color: var(--text-main); display: block; margin-bottom: 4px;">${t.topicName}</strong>
-                            <p style="margin: 0; font-size: 0.8rem; color: var(--text-dim);">${t.description}</p>
+                            <p style="margin: 0; font-size: 0.8rem; color: var(--text-dim);">${t.context || 'Click to start lesson'}</p>
                         </div>
-                    `).join('') : `<p style="font-style: italic; font-size: 0.8rem; color: var(--text-dim);">No topics added for this term yet.</p>`}
+                    `).join('') : `<p style="font-style: italic; font-size: 0.8rem; color: var(--text-dim);">No ATP topics available for this term.</p>`}
                 </div>
             </div>
         `).join('');
 
+        // Store for later use
+        currentProfile.activeCurriculumId = curriculumId;
+
     } catch (e) {
+        console.error("Portal error:", e);
         mainArea.innerHTML = `<h2>Error loading portal: ${e.message}</h2>`;
     }
 };
 
-// Toggle Add Topic Modal (Centered)
-window.toggleTopicModal = function () {
-    const modal = document.getElementById('topic-modal');
-    if (modal) modal.classList.toggle('active');
-};
-
-// Legacy fallback
-window.toggleTopicForm = window.toggleTopicModal;
-
-window.saveTopic = async function (curr, subj) {
-    const topicBtn = event.target;
-    const originalText = topicBtn.innerText;
-    topicBtn.innerText = "Saving...";
-    topicBtn.disabled = true;
-
-    const data = {
-        curriculum: curr,
-        subjectName: subj,
-        term: document.getElementById('t-term').value,
-        topicName: document.getElementById('t-name').value,
-        description: document.getElementById('t-desc').value
-    };
-
-    if (!data.topicName) {
-        topicBtn.innerText = originalText;
-        topicBtn.disabled = false;
-        return alert("Please enter a topic name.");
-    }
+// Start a lesson directly from ATP topic
+window.startATPLesson = async function (topicId, topicName, subjectName) {
+    const email = cognitoUser.getUsername();
+    const grade = currentProfile.grade || "";
 
     try {
-        const resp = await fetch(`${API_BASE}/topics`, {
+        const resp = await fetch(`${API_BASE}/lessons/start`, {
             method: 'POST',
-            body: JSON.stringify(data)
+            body: JSON.stringify({
+                email,
+                topicId,
+                subjectName,
+                grade
+            })
         });
-
-        if (resp.ok) {
-            window.openSubjectPortal(subj); // Refresh
-        } else {
-            const err = await resp.json();
-            console.error("Server error details:", err);
-            alert("Error: " + (err.error || "Failed to save topic") + "\n\nDebug Info: " + JSON.stringify(err.debug || {}));
-            topicBtn.innerText = originalText;
-            topicBtn.disabled = false;
-        }
+        const lesson = await resp.json();
+        renderChatRoom(lesson);
     } catch (e) {
-        console.error("Save topic error:", e);
-        alert("Network Error: Could not connect to API.");
-        topicBtn.innerText = originalText;
-        topicBtn.disabled = false;
+        alert("Failed to start lesson: " + e.message);
     }
 };
 

@@ -14,6 +14,7 @@ GEMINI_CONFIGURED = False
 # AWS Services
 dynamodb = boto3.resource('dynamodb')
 lesson_table = dynamodb.Table('Lessons')
+topics_table = dynamodb.Table('Topics')
 
 def ensure_config():
     global GEMINI_CONFIGURED
@@ -49,10 +50,13 @@ async def root():
 # --- Memory-Efficient Session Handling ---
 sessions = {}
 
-def get_chat_session(session_id: str, history=None):
+def get_chat_session(session_id: str, history=None, system_instruction=None):
     ensure_config()
     if session_id not in sessions:
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = genai.GenerativeModel(
+            'gemini-2.5-flash',
+            system_instruction=system_instruction
+        )
         formatted_history = history or []
         sessions[session_id] = model.start_chat(history=formatted_history)
     return sessions[session_id]
@@ -69,15 +73,45 @@ async def chat_stream(request: Request):
 
         # Persistence: Solve the 'Amnesia' failure
         db_history = []
+        topic_context = ""
+        topic_name = ""
+        subject_name = ""
+        grade = ""
+        
         if lesson_id not in sessions:
             res = lesson_table.get_item(Key={'lessonId': lesson_id})
             item = res.get('Item', {})
             raw_history = item.get('history', [])
+            topic_context = item.get('topicContext', '')
+            topic_name = item.get('topicName', '')
+            subject_name = item.get('subjectName', '')
+            grade = item.get('grade', '')
+            
             for h in raw_history:
                 role = 'user' if h['role'] == 'user' else 'model'
                 db_history.append({'role': role, 'parts': [h['content']]})
+        
+        # Build ATP-aware system instruction
+        system_instruction = f"""You are a South African CAPS-aligned AI tutor teaching {subject_name} to Grade {grade} learners.
 
-        chat = get_chat_session(lesson_id, history=db_history)
+CURRENT TOPIC: {topic_name}
+
+TEACHING CONTEXT:
+{topic_context}
+
+TEACHING APPROACH:
+1. Be warm, encouraging, and patient with learners
+2. Use examples relevant to South African context when possible
+3. Introduce key definitions naturally as concepts come up
+4. Break down complex concepts into digestible parts
+5. Ask follow-up questions to check understanding
+6. Suggest related topics when appropriate for enrichment
+7. Use proper formatting: **bold** for emphasis, bullet points for lists
+8. For math/science, use LaTeX notation ($inline$ or $$block$$)
+
+Remember: Your goal is to help the learner truly understand, not just memorize."""
+
+        chat = get_chat_session(lesson_id, history=db_history, system_instruction=system_instruction)
         
         message_parts = [user_message]
         image_data = data.get("image")

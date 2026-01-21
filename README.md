@@ -87,11 +87,28 @@ graph TD
 
 ## ✨ Application Features
 
+### ATP Curriculum Integration (NEW)
+
+The platform now integrates **69 official CAPS Annual Teaching Plans** covering Grades 7-12 across all major subjects.
+
+| Feature | Description |
+| :--- | :--- |
+| **Read-Only ATP** | Standardized CAPS curriculum - learners cannot create custom topics |
+| **Term-Based Navigation** | Topics organized by term (1-4) for easy browsing |
+| **Context-Aware AI** | Gemini receives topic context as system prompt for better tutoring |
+| **Learning Objectives** | Each lesson starts with clear objectives and focus questions |
+
+**Data Statistics:**
+- 128 curriculum entries (subject + grade combinations)
+- 975 topics with term assignments
+- Covers Mathematics, Sciences, Languages, Commerce, and Technical subjects
+
 ### AI-Powered Learning
 
 | Feature | Description | Endpoint |
 | :--- | :--- | :--- |
 | **Real-Time AI Chat** | Gemini 2.5 Flash provides streaming, context-aware tutoring | `POST /chat-stream` |
+| **CAPS-Aligned Teaching** | AI uses South African context and introduces key definitions naturally | (via system prompt) |
 | **Multimodal Input** | Learners can attach images (e.g., a photo of a problem) for AI analysis | (via chat) |
 | **Quiz Generation** | AI generates a 5-question MCQ quiz based on the lesson conversation | `POST /generate-quiz` |
 | **Automated Grading** | AI grades quiz attempts and provides detailed feedback | `POST /grade-quiz` |
@@ -101,18 +118,20 @@ graph TD
 
 | Feature | Description | Endpoint |
 | :--- | :--- | :--- |
-| **Profile Management** | Learners can set their name, surname, grade, and curriculum (CAPS/IEB) | `GET/POST /profile` |
+| **Profile Management** | Learners set name, surname, grade, and curriculum (CAPS/IEB) | `GET/POST /profile` |
 | **Subject Enrollment** | Browse available subjects and enroll with a single click | `POST /enroll` |
-| **Topic Management** | Tutors can add topics to subjects (term, name, description) | `POST /topics` |
+| **ATP Subjects by Grade** | Fetch available ATP subjects for a specific grade | `GET /curriculum` |
+| **ATP Topics** | Fetch topics by curriculum ID, sorted by term | `GET /curriculum/topics` |
 | **Learning Statistics** | Aggregate quiz scores per subject to track progress | `GET /stats` |
 
 ### Lesson Lifecycle
 
 | Feature | Description | Endpoint |
 | :--- | :--- | :--- |
-| **Start Lesson** | Creates a new lesson record linked to the user, topic, and subject | `POST /lessons/start` |
+| **Start Lesson** | Creates lesson with ATP context, welcome message, and learning objectives | `POST /lessons/start` |
 | **Chat & Learn** | Persist user messages during the AI conversation | `POST /lessons/chat` |
-| **Complete Lesson** | Marks a lesson as completed for review later | `POST /lessons/complete` |
+| **Finish Lesson** | Marks lesson ready for assessment | `POST /lessons/finish` |
+| **Complete Lesson** | Marks lesson as fully completed | `POST /lessons/complete` |
 | **Review Past Lessons** | Fetch completed lessons by topic or individual lesson ID | `GET /lessons` |
 
 ### Frontend Capabilities
@@ -192,22 +211,42 @@ python3 -m http.server 8888
 Smart-AI-Tutor/
 ├── index.html              # Login page
 ├── dashboard.html          # Learner dashboard
+├── subject-portal.html     # ATP subject portal (read-only topics)
+├── chat-room.html          # AI chat interface
+├── assessment.html         # Test/assessment page
 ├── style.css               # UI styles (dark theme)
 ├── app.js                  # Core frontend logic
 ├── auth.js                 # Cognito authentication
-├── gemini_handler.py       # AI streaming Lambda (FastAPI)
-├── profile_handler.py      # Profile/Subjects/Lessons Lambda
+│
+├── gemini_handler.py       # AI streaming Lambda (FastAPI + ATP context)
+├── profile_handler.py      # Profile/Subjects/Lessons/Curriculum Lambda
 ├── process_user.py         # Cognito post-confirmation sync
+│
+├── atp_parser.py           # Extracts curriculum from PPTX files
+├── seed_curriculum.py      # Seeds DynamoDB with ATP data
+│
 ├── cognito.tf              # Cognito User Pool config
 ├── lambda.tf               # Lambda + API Gateway + SSM
-├── dynamo.tf               # DynamoDB tables
-├── frontend.tf             # S3/CloudFront (optional)
+├── dynamo.tf               # DynamoDB tables (6 tables)
+├── frontend.tf             # S3/CloudFront
 ├── providers.tf            # AWS provider config
+│
 ├── sync-api.sh             # Script to inject API URLs
 ├── package_gemini.py       # Builds Gemini Lambda zip
 ├── requirements.txt        # Python dependencies
 └── .gitignore              # Excludes secrets, .terraform, etc.
 ```
+
+### DynamoDB Tables
+
+| Table | Purpose |
+| :--- | :--- |
+| `UserProfiles` | Learner profiles (email, name, grade, subjects) |
+| `Subjects` | Subject metadata and enrollments |
+| `Lessons` | Lesson history, scores, and ATP context |
+| `Curriculum` | ATP subject + grade combinations |
+| `Topics` | ATP topics with term and context |
+| `Subtopics` | Detailed subtopics (future use) |
 
 ---
 
