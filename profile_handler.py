@@ -65,6 +65,15 @@ def lambda_handler(event, context):
         response = subject_table.get_item(Key={'curriculum': curr, 'subjectName': subj})
         return build_response(200, response.get('Item', {}))
 
+    # GET Available Grades from ATP Curriculum
+    elif method == 'GET' and (path.endswith('/grades') or path == 'grades'):
+        # Scan curriculum table to get unique grades
+        response = curriculum_table.scan(ProjectionExpression='grade')
+        items = response.get('Items', [])
+        # Get unique grades and sort them
+        unique_grades = sorted(set(item['grade'] for item in items if 'grade' in item), key=int)
+        return build_response(200, unique_grades)
+
     # GET ATP Curriculum Subjects by Grade
     elif method == 'GET' and (path.endswith('/curriculum') or path == 'curriculum'):
         grade = query_params.get('grade')

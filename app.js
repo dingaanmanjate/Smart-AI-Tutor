@@ -115,7 +115,7 @@ window.renderDashboard = async function (email) {
 
         renderCriticalCards(subjects);
 
-        loadSubjects();
+        loadSubjectsForPopup();
     } catch (e) {
         dashboard.innerHTML = `
             <div style="padding: 40px; text-align: center;">
@@ -141,26 +141,54 @@ window.toggleSubjectPopup = function () {
     }
 
     // Load subjects into both popups
-    loadSubjectsForPopup();
-};
+    // Load grades for profile setup if element exists
+    const gradeSelect = document.getElementById('p-grade');
+    if (gradeSelect) loadGrades();
+}
 
-// Load subjects into popup selects
-async function loadSubjectsForPopup() {
-    const curriculum = currentProfile.curriculum || 'CAPS';
-
-    // Update curriculum display in popups
-    const popupCurr = document.getElementById('popup-curriculum');
-    const footerCurr = document.getElementById('footer-popup-curriculum');
-    if (popupCurr) popupCurr.innerText = curriculum;
-    if (footerCurr) footerCurr.innerText = curriculum;
+async function loadGrades() {
+    const select = document.getElementById('p-grade');
+    if (!select) return;
 
     try {
-        const resp = await fetch(`${API_BASE}/subjects?curriculum=${curriculum}`);
+        const resp = await fetch(`${API_BASE}/grades`);
+        const grades = await resp.json();
+
+        // Preserve existing selection if any (e.g. during profile edit)
+        const currentVal = select.getAttribute('data-current') || select.value;
+
+        select.innerHTML = grades.map(g => `
+            <option value="${g}" ${g == currentVal ? 'selected' : ''}>Grade ${g}</option>
+        `).join('') || '<option value="">No grades found</option>';
+
+        // If user already has a grade, select it
+        if (currentProfile && currentProfile.grade) {
+            select.value = currentProfile.grade;
+        }
+    } catch (e) {
+        console.error("Error loading grades:", e);
+        select.innerHTML = '<option value="10">Grade 10 (Offline)</option>';
+    }
+}
+
+async function loadSubjectsForPopup() {
+    const grade = currentProfile.grade || "10";
+    const curriculum = currentProfile.curriculum || "CAPS";
+
+    // Update display in popups
+    const popupCurr = document.getElementById('popup-curriculum');
+    const footerCurr = document.getElementById('footer-popup-curriculum');
+    if (popupCurr) popupCurr.innerText = `${curriculum} - Grade ${grade}`;
+    if (footerCurr) footerCurr.innerText = `${curriculum} - Grade ${grade}`;
+
+    try {
+        // Fetch subjects for this grade from ATP database
+        const resp = await fetch(`${API_BASE}/curriculum?grade=${grade}`);
         const subjects = await resp.json();
 
         const optionsHtml = subjects.map(s => `
-            <option value="${s.subjectName}">${s.subjectName} (${s.studentCount || 0} enrolled)</option>
-        `).join('') || '<option>No subjects found</option>';
+            <option value="${s.subjectName}">${s.subjectName}</option>
+        `).join('') || '<option>No subjects found for this grade</option>';
 
         // Populate both popup selects
         const popupSelect = document.getElementById('popup-subj-select');
@@ -196,34 +224,23 @@ async function saveProfile(email) {
             const curr = document.getElementById('display-curriculum');
             if (curr) curr.innerText = data.curriculum;
 
+            // Update global profile object
+            currentProfile.name = data.name;
+            currentProfile.surname = data.surname;
+            currentProfile.grade = data.grade;
+            currentProfile.curriculum = data.curriculum;
+
             // Hide Setup Card and Expand Academic Card
             const setupCard = document.getElementById('profile-setup-card');
             const acadCard = document.getElementById('academic-card');
             if (setupCard) setupCard.style.display = 'none';
             if (acadCard) acadCard.style.gridColumn = '1 / span 2';
 
-            loadSubjects();
+            // Refresh subjects available for enrollment based on new grade
+            loadSubjectsForPopup();
         }
     } catch (e) {
         console.error("Save error:", e);
-    }
-}
-
-async function loadSubjects() {
-    const curriculum = document.getElementById('p-curriculum').value;
-    const select = document.getElementById('subj-select');
-    if (!select) return;
-    select.innerHTML = '<option>Loading...</option>';
-
-    try {
-        const resp = await fetch(`${API_BASE}/subjects?curriculum=${curriculum}`);
-        const subjects = await resp.json();
-
-        select.innerHTML = subjects.map(s => `
-            <option value="${s.subjectName}">${s.subjectName} (${s.studentCount || 0} enrolled)</option>
-        `).join('') || '<option>No subjects found</option>';
-    } catch (e) {
-        select.innerHTML = '<option>Error loading</option>';
     }
 }
 

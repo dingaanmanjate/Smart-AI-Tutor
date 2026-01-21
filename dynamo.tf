@@ -91,8 +91,8 @@ resource "aws_dynamodb_table" "curriculum" {
 
   global_secondary_index {
     name               = "SubjectGradeIndex"
-    hash_key           = "subjectName"
-    range_key          = "grade"
+    hash_key           = "grade"
+    range_key          = "subjectName"
     projection_type    = "ALL"
   }
 
