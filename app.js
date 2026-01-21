@@ -1,5 +1,5 @@
-const API_BASE = "https://hdc6ss053e.execute-api.af-south-1.amazonaws.com/prod/";
-const GEMINI_API_URL = "https://dxpdnpv3yqmd6pid5jxjtymqv40fedtm.lambda-url.af-south-1.on.aws/"; // Populated by sync-api.sh
+const API_BASE = "https://ia3l0uc788.execute-api.af-south-1.amazonaws.com/prod/";
+const GEMINI_API_URL = "https://jhthoghclmear3dzu2r6ftstfa0zqhvc.lambda-url.af-south-1.on.aws/"; // Populated by sync-api.sh
 // Global state to prevent UI crashes when switching views
 let currentProfile = {};
 
@@ -81,7 +81,12 @@ window.renderDashboard = async function (email) {
 
         // Attach event listeners for dynamic elements
         document.getElementById('save-profile-btn').onclick = () => saveProfile(email);
-        document.getElementById('enroll-btn').onclick = () => enrollSubject(email);
+
+        // Attach popup enroll button handlers
+        const popupEnrollBtn = document.getElementById('popup-enroll-btn');
+        const footerEnrollBtn = document.getElementById('footer-enroll-btn');
+        if (popupEnrollBtn) popupEnrollBtn.onclick = () => enrollSubject(email);
+        if (footerEnrollBtn) footerEnrollBtn.onclick = () => enrollSubject(email);
 
         // Populate enrolled subjects list
         const list = document.getElementById('my-subjects-list');
@@ -123,9 +128,48 @@ window.renderDashboard = async function (email) {
     }
 }
 
-function toggleSubjectForm() {
-    const area = document.getElementById('subject-selection-area');
-    area.style.display = area.style.display === 'none' ? 'block' : 'none';
+// Toggle Subject Enrollment Popup (Desktop sidebar / Mobile footer)
+window.toggleSubjectPopup = function () {
+    const isMobile = window.innerWidth <= 768;
+
+    if (isMobile) {
+        const popup = document.getElementById('footer-subject-popup');
+        if (popup) popup.classList.toggle('active');
+    } else {
+        const popup = document.getElementById('sidebar-subject-popup');
+        if (popup) popup.classList.toggle('active');
+    }
+
+    // Load subjects into both popups
+    loadSubjectsForPopup();
+};
+
+// Load subjects into popup selects
+async function loadSubjectsForPopup() {
+    const curriculum = currentProfile.curriculum || 'CAPS';
+
+    // Update curriculum display in popups
+    const popupCurr = document.getElementById('popup-curriculum');
+    const footerCurr = document.getElementById('footer-popup-curriculum');
+    if (popupCurr) popupCurr.innerText = curriculum;
+    if (footerCurr) footerCurr.innerText = curriculum;
+
+    try {
+        const resp = await fetch(`${API_BASE}/subjects?curriculum=${curriculum}`);
+        const subjects = await resp.json();
+
+        const optionsHtml = subjects.map(s => `
+            <option value="${s.subjectName}">${s.subjectName} (${s.studentCount || 0} enrolled)</option>
+        `).join('') || '<option>No subjects found</option>';
+
+        // Populate both popup selects
+        const popupSelect = document.getElementById('popup-subj-select');
+        const footerSelect = document.getElementById('footer-subj-select');
+        if (popupSelect) popupSelect.innerHTML = optionsHtml;
+        if (footerSelect) footerSelect.innerHTML = optionsHtml;
+    } catch (e) {
+        console.error('Error loading subjects for popup:', e);
+    }
 }
 
 async function saveProfile(email) {
@@ -184,8 +228,14 @@ async function loadSubjects() {
 }
 
 async function enrollSubject(email) {
-    const subjName = document.getElementById('subj-select').value;
-    const curr = document.getElementById('p-curriculum').value;
+    const isMobile = window.innerWidth <= 768;
+    const selectId = isMobile ? 'footer-subj-select' : 'popup-subj-select';
+    const subjName = document.getElementById(selectId)?.value;
+    const curr = currentProfile.curriculum || 'CAPS';
+
+    if (!subjName) {
+        return alert('Please select a subject');
+    }
 
     // Client-side check
     const existing = Array.from(document.querySelectorAll('#my-subjects-list li')).map(li => li.innerText);
@@ -200,10 +250,9 @@ async function enrollSubject(email) {
         });
 
         if (resp.ok) {
-            // Full refresh of the sidebar list to reset the infinite loop
+            // Close popup and refresh
+            toggleSubjectPopup();
             renderDashboard(email);
-            toggleSubjectForm(); // Hide form after enrollment
-            loadSubjects(); // Update counts
         } else {
             const data = await resp.json();
             alert(data.error || "Enrollment failed");
@@ -234,82 +283,61 @@ window.openSubjectPortal = async function (subjectName) {
         const footer = document.querySelector('.mobile-footer');
         if (footer) footer.classList.remove('hidden');
 
-        const resp = await fetch(`${API_BASE}/subject-details?curriculum=${encodeURIComponent(curriculum)}&subjectName=${encodeURIComponent(subjectName)}`);
-        const subjectData = await resp.json();
+        // Load template and data in parallel
+        const [templateResp, dataResp] = await Promise.all([
+            fetch('/subject-portal.html'),
+            fetch(`${API_BASE}/subject-details?curriculum=${encodeURIComponent(curriculum)}&subjectName=${encodeURIComponent(subjectName)}`)
+        ]);
+
+        const templateHtml = await templateResp.text();
+        const subjectData = await dataResp.json();
         const topics = subjectData.topics || [];
 
+        // Inject template
+        mainArea.innerHTML = templateHtml;
 
-        // Group topics by term
+        // Populate dynamic content
+        document.getElementById('portal-subject-name').innerText = `${subjectName} Portal`;
+        document.getElementById('portal-curriculum').innerText = `Curriculum: ${curriculum}`;
+        document.getElementById('add-topic-title').innerText = `Add Topic to ${subjectName}`;
+
+        // Attach save topic handler
+        document.getElementById('save-topic-btn').onclick = () => saveTopic(curriculum, subjectName);
+
+        // Group topics by term and render
         const terms = { "Term 1": [], "Term 2": [], "Term 3": [], "Term 4": [] };
         topics.forEach(t => {
             if (terms[t.term]) terms[t.term].push(t);
         });
 
-        mainArea.innerHTML = `
-            <div class="portal-header">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div>
-                        <button class="primary-btn" onclick="renderDashboard(cognitoUser.getUsername())" style="padding: 10px 15px; font-size: 0.7rem; margin-bottom: 20px;"><- Back to Dashboard</button>
-                        <h1>${subjectName} Portal</h1>
-                        <p class="text-dim">Curriculum: ${curriculum}</p>
-                    </div>
-                    <button class="primary-btn" onclick="toggleTopicForm()" style="font-size: 0.7rem;">+ Add Topic</button>
-                </div>
-            </div>
-
-            <!-- Add Topic Form (Hidden) -->
-            <div id="add-topic-area" style="display:none; margin: 30px 0;" class="stats-card">
-                <h3>Add Topic to ${subjectName}</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
-                    <div class="form-group">
-                        <label>Term</label>
-                        <select id="t-term">
-                            <option>Term 1</option><option>Term 2</option><option>Term 3</option><option>Term 4</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Topic Name</label>
-                        <input type="text" id="t-name" placeholder="e.g. Algebra Fundamentals">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Description</label>
-                    <input type="text" id="t-desc" placeholder="Brief overview of the topic">
-                </div>
-                <div style="display: flex; gap: 15px;">
-                    <button class="primary-btn" onclick="saveTopic('${curriculum}', '${subjectName}')" style="flex:1;">Save Topic</button>
-                    <button class="logout-btn" onclick="toggleTopicForm()" style="flex:1; margin:0;">Cancel</button>
-                </div>
-            </div>
-
-            <div class="atp-container stats-card" style="margin-top: 30px;">
-                <h3>Annual Teaching Plan (ATP) - 2026</h3>
-                <div class="atp-list">
-                    ${Object.entries(terms).map(([term, termTopics]) => `
-                        <div class="atp-item">
-                            <span class="term">${term}</span>
-                            <div style="flex: 1;">
-                                ${termTopics.length > 0 ? termTopics.map(t => `
-                                    <div class="topic-entry" onclick="interactWithTopic('${t.id}')" style="cursor:pointer; margin-bottom: 15px;">
-                                        <strong style="color: var(--text-main); display: block; margin-bottom: 4px;">${t.topicName}</strong>
-                                        <p style="margin: 0; font-size: 0.8rem; color: var(--text-dim);">${t.description}</p>
-                                    </div>
-                                `).join('') : `<p style="font-style: italic; font-size: 0.8rem; color: var(--text-dim);">No topics added for this term yet.</p>`}
-                            </div>
+        const atpContainer = document.getElementById('atp-terms-container');
+        atpContainer.innerHTML = Object.entries(terms).map(([term, termTopics]) => `
+            <div class="atp-item">
+                <span class="term">${term}</span>
+                <div style="flex: 1;">
+                    ${termTopics.length > 0 ? termTopics.map(t => `
+                        <div class="topic-entry" onclick="interactWithTopic('${t.id}')" style="cursor:pointer; margin-bottom: 15px;">
+                            <strong style="color: var(--text-main); display: block; margin-bottom: 4px;">${t.topicName}</strong>
+                            <p style="margin: 0; font-size: 0.8rem; color: var(--text-dim);">${t.description}</p>
                         </div>
-                    `).join('')}
+                    `).join('') : `<p style="font-style: italic; font-size: 0.8rem; color: var(--text-dim);">No topics added for this term yet.</p>`}
                 </div>
             </div>
-        `;
+        `).join('');
+
     } catch (e) {
         mainArea.innerHTML = `<h2>Error loading portal: ${e.message}</h2>`;
     }
 };
 
-window.toggleTopicForm = function () {
-    const area = document.getElementById('add-topic-area');
-    if (area) area.style.display = area.style.display === 'none' ? 'block' : 'none';
+// Toggle Add Topic Modal (Centered)
+window.toggleTopicModal = function () {
+    const modal = document.getElementById('topic-modal');
+    if (modal) modal.classList.toggle('active');
 };
+
+// Legacy fallback
+window.toggleTopicForm = window.toggleTopicModal;
 
 window.saveTopic = async function (curr, subj) {
     const topicBtn = event.target;
@@ -454,34 +482,66 @@ window.interactWithTopic = async function (topicId) {
     mainArea.innerHTML = `<div style="padding: 40px; text-align: center;"><h2>Loading Lesson History...</h2></div>`;
 
     try {
-        const resp = await fetch(`${API_BASE}/lessons?email=${encodeURIComponent(email)}&topicId=${encodeURIComponent(topicId)}`);
-        const lessons = await resp.json();
+        // Load template and data in parallel
+        const [templateResp, dataResp] = await Promise.all([
+            fetch('/lesson-history.html'),
+            fetch(`${API_BASE}/lessons?email=${encodeURIComponent(email)}&topicId=${encodeURIComponent(topicId)}`)
+        ]);
 
-        mainArea.innerHTML = `
-            <div class="portal-header">
-                <button class="primary-btn" onclick="openSubjectPortal(currentProfile.activeSubject)" style="padding: 10px 15px; font-size: 0.7rem; margin-bottom: 20px;"><- Back to Topics</button>
-                <h1>Topic: ${topicId}</h1>
-                <p class="text-dim">Review your previous lessons or start a new AI tutoring session.</p>
-                <button class="primary-btn" onclick="startNewLesson('${topicId}')" style="margin-top:20px;">+ Start New Lesson</button>
-            </div>
+        const templateHtml = await templateResp.text();
+        const lessons = await dataResp.json();
 
-            <div class="lesson-history-grid">
-                ${lessons.length > 0 ? lessons.map(l => `
+        // Inject template
+        mainArea.innerHTML = templateHtml;
+
+        // Populate dynamic content
+        document.getElementById('topic-title').innerText = `Topic: ${topicId}`;
+        document.getElementById('back-to-topics-btn').onclick = () => openSubjectPortal(currentProfile.activeSubject);
+        document.getElementById('start-lesson-btn').onclick = () => startNewLesson(topicId);
+
+        // Render lesson cards
+        const container = document.getElementById('lessons-container');
+        if (lessons.length > 0) {
+            container.innerHTML = lessons.map(l => {
+                const statusDisplay = l.status === 'finished' ? 'Ready for Test' :
+                    l.status === 'completed' ? 'Completed' : 'In Progress';
+                const scoreDisplay = l.assessmentScore ? `<p style="color: #00ff00; font-weight: bold;">Score: ${l.assessmentScore}%</p>` : '';
+
+                let buttonsHtml = '';
+                if (l.status === 'finished') {
+                    // Finished but not tested yet - prominent TAKE TEST button
+                    buttonsHtml = `
+                        <div style="display:flex; gap:10px;">
+                            <button class="primary-btn" onclick="viewRecap('${l.lessonId}')" style="font-size: 0.7rem; flex:1;">RECAP</button>
+                            <button class="primary-btn" onclick="openAssessment('${l.lessonId}')" style="font-size: 0.7rem; flex:1; background: #00ff00; color: #000; font-weight: bold;">TAKE TEST</button>
+                        </div>
+                    `;
+                } else if (l.status === 'completed') {
+                    // Fully completed with score
+                    buttonsHtml = `
+                        <div style="display:flex; gap:10px;">
+                            <button class="primary-btn" onclick="viewRecap('${l.lessonId}')" style="font-size: 0.7rem; flex:1;">RECAP</button>
+                            ${!l.assessmentScore ? `<button class="primary-btn" onclick="openAssessment('${l.lessonId}')" style="font-size: 0.7rem; flex:1; background: var(--border-main); color: var(--bg-pure);">RETEST</button>` : ''}
+                        </div>
+                    `;
+                } else {
+                    // Teaching in progress
+                    buttonsHtml = `<button class="primary-btn" onclick="resumeLesson('${l.lessonId}')" style="font-size: 0.7rem; width:100%;">RESUME</button>`;
+                }
+
+                return `
                     <div class="lesson-card">
                         <h4>Lesson ${l.lessonId.substring(2)}</h4>
-                        <p style="font-size: 0.8rem; color: var(--text-dim);">Status: ${l.status}</p>
-                        ${l.status === 'completed' ? `
-                            <div style="display:flex; gap:10px;">
-                                <button class="primary-btn" onclick="viewRecap('${l.lessonId}')" style="font-size: 0.7rem; flex:1;">RECAP</button>
-                                <button class="primary-btn" onclick="openAssessment('${l.lessonId}')" style="font-size: 0.7rem; flex:1; background: var(--border-main); color: var(--bg-pure);">TEST</button>
-                            </div>
-                        ` : `
-                            <button class="primary-btn" onclick="resumeLesson('${l.lessonId}')" style="font-size: 0.7rem; width:100%;">RESUME</button>
-                        `}
+                        <p style="font-size: 0.8rem; color: var(--text-dim);">Status: ${statusDisplay}</p>
+                        ${scoreDisplay}
+                        ${buttonsHtml}
                     </div>
-                `).join('') : '<p class="text-dim">No lessons found for this topic yet. Click above to start!</p>'}
-            </div>
-        `;
+                `;
+            }).join('');
+        } else {
+            container.innerHTML = '<p class="text-dim">No lessons found for this topic yet. Click above to start!</p>';
+        }
+
         // Save state
         currentProfile.activeTopicId = topicId;
     } catch (e) {
@@ -511,52 +571,106 @@ window.startNewLesson = async function (topicId) {
     }
 };
 
-function renderChatRoom(lesson, isReadOnly = false) {
+async function renderChatRoom(lesson, isReadOnly = false) {
     const mainArea = document.querySelector('.main-dashboard');
     mainArea.classList.add('chat-active'); // Make UI static
 
-    mainArea.innerHTML = `
-        <div class="chat-header-whatsapp">
-            <button class="chat-back-btn" onclick="exitChatRoom()">←</button>
-            <div class="chat-profile">
-                <div class="chat-avatar">AI</div>
-                <div class="chat-name-info">
-                    <h4>AI Tutor</h4>
-                    <span>${isReadOnly ? 'Lesson Recap' : 'Active Session'}</span>
-                </div>
-            </div>
-            ${isReadOnly ? '' : `<button class="primary-btn" onclick="finishLesson('${lesson.lessonId}')" style="font-size: 0.6rem; padding: 5px 10px; margin:0;">FINISH</button>`}
-        </div>
+    const isFinished = lesson.status === 'finished';
 
-        <div class="chat-room">
-            <div id="chat-messages" class="chat-messages">
-                ${lesson.history.map(m => `
-                    <div class="message ${m.role}">
-                        ${m.content}
-                    </div>
-                `).join('')}
-                ${isReadOnly ? `<div class="message ai" style="font-style:italic; background: rgba(255,255,255,0.05); border-color: var(--border-subtle);">This lesson is completed. You can review the history above.</div>` : ''}
-            </div>
+    try {
+        const templateResp = await fetch('/chat-room.html');
+        const templateHtml = await templateResp.text();
+        mainArea.innerHTML = templateHtml;
 
-            ${isReadOnly ? '' : `
-            <div id="img-preview" class="img-preview-area" style="display:none"></div>
-            <div class="chat-input-area">
-                <button class="chat-tool-btn" id="voice-btn" onclick="startVoiceInput()" title="Voice Input">🎤</button>
-                <button class="chat-tool-btn" onclick="document.getElementById('chat-img-input').click()" title="Attach Photo">📷</button>
-                <input type="file" id="chat-img-input" style="display:none" accept="image/*" onchange="previewImage(this)">
-                
-                <input type="text" id="chat-input" class="chat-input" placeholder="Message..." onkeyup="if(event.key==='Enter') sendChatMessage('${lesson.lessonId}')">
-                <button class="chat-send-btn" onclick="sendChatMessage('${lesson.lessonId}')">➤</button>
-            </div>
-            `}
-        </div>
-    `;
-    const box = document.getElementById('chat-messages');
-    box.scrollTop = box.scrollHeight;
+        // Update status text
+        let statusText = 'Active Session';
+        if (isFinished) statusText = 'Finished - Ready for Test';
+        else if (isReadOnly) statusText = 'Lesson Recap';
+        document.getElementById('chat-status').innerText = statusText;
 
-    // Hide mobile footer for focused lesson
-    const footer = document.querySelector('.mobile-footer');
-    if (footer) footer.classList.add('hidden');
+        // Render message history with math formatting
+        const messagesHtml = lesson.history.map(m => `
+            <div class="message ${m.role}">
+                ${formatMessageContent(m.content)}
+            </div>
+        `).join('');
+
+        const box = document.getElementById('chat-messages');
+        box.innerHTML = messagesHtml;
+
+        // Apply KaTeX rendering to all messages
+        renderMathInChat();
+
+        if (isFinished) {
+            // Show finished state - input disabled, Take Test button visible
+            document.getElementById('chat-input-container').style.display = 'none';
+            const finishBtn = document.getElementById('finish-lesson-btn');
+            finishBtn.innerText = 'TAKE TEST';
+            finishBtn.onclick = () => openAssessment(lesson.lessonId);
+        } else if (isReadOnly) {
+            box.innerHTML += `<div class="message ai" style="font-style:italic; background: rgba(255,255,255,0.05); border-color: var(--border-subtle);">This lesson is completed. You can review the history above.</div>`;
+            // Hide input area for read-only
+            document.getElementById('chat-input-container').style.display = 'none';
+            document.getElementById('finish-lesson-btn').style.display = 'none';
+        } else {
+            // Active lesson - attach event handlers
+            document.getElementById('finish-lesson-btn').onclick = () => finishLesson(lesson.lessonId);
+            document.getElementById('chat-input').onkeyup = (e) => {
+                if (e.key === 'Enter') sendChatMessage(lesson.lessonId);
+            };
+            document.getElementById('send-msg-btn').onclick = () => sendChatMessage(lesson.lessonId);
+        }
+
+        box.scrollTop = box.scrollHeight;
+
+        // Hide mobile footer for focused lesson
+        const footer = document.querySelector('.mobile-footer');
+        if (footer) footer.classList.add('hidden');
+    } catch (e) {
+        mainArea.innerHTML = `<h2>Error loading chat: ${e.message}</h2>`;
+    }
+}
+
+// Format message content - handle code blocks and escape HTML
+function formatMessageContent(content) {
+    if (!content) return '';
+
+    // Escape HTML first
+    let formatted = content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    // Handle code blocks (```...```)
+    formatted = formatted.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
+        return `<pre class="code-block"><code>${code.trim()}</code></pre>`;
+    });
+
+    // Handle inline code (`...`)
+    formatted = formatted.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+
+    // Preserve newlines
+    formatted = formatted.replace(/\n/g, '<br>');
+
+    return formatted;
+}
+
+// Render math equations using KaTeX
+function renderMathInChat() {
+    if (typeof renderMathInElement !== 'undefined') {
+        const chatBox = document.getElementById('chat-messages');
+        if (chatBox) {
+            renderMathInElement(chatBox, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false },
+                    { left: '\\[', right: '\\]', display: true },
+                    { left: '\\(', right: '\\)', display: false }
+                ],
+                throwOnError: false
+            });
+        }
+    }
 }
 
 window.exitChatRoom = function () {
@@ -566,7 +680,7 @@ window.exitChatRoom = function () {
     const footer = document.querySelector('.mobile-footer');
     if (footer) footer.classList.remove('hidden');
 
-    renderDashboard(cognitoUser.getUsername());
+    interactWithTopic(currentProfile.activeTopicId);
 };
 
 window.sendChatMessage = async function (lessonId) {
@@ -746,71 +860,240 @@ window.submitQuiz = async function (lessonId) {
 };
 
 window.finishLesson = async function (lessonId) {
-    if (!confirm("Are you ready to finish the teaching session and start your knowledge check?")) return;
+    if (!confirm("Are you ready to finish the teaching session? After finishing, you can take a test to check your knowledge.")) return;
 
-    // UI: Transition to Quiz
-    window.takeQuiz(lessonId);
+    try {
+        // Call backend to mark lesson as finished
+        const res = await fetch(`${API_BASE}/lessons/finish`, {
+            method: 'POST',
+            body: JSON.stringify({ lessonId: lessonId })
+        });
+
+        const data = await res.json();
+
+        // Append goodbye message to chat
+        const box = document.getElementById('chat-messages');
+        box.innerHTML += `
+            <div class="message ai" style="background: linear-gradient(135deg, #1a1a2e, #16213e); border-color: var(--accent-blue);">
+                ${formatMessageContent(data.goodbye || "Great work! Your lesson is complete.")}
+            </div>
+        `;
+        box.scrollTop = box.scrollHeight;
+        renderMathInChat();
+
+        // Disable input area
+        document.getElementById('chat-input-container').style.display = 'none';
+
+        // Change FINISH button to EXIT/TAKE TEST
+        const finishBtn = document.getElementById('finish-lesson-btn');
+        finishBtn.innerText = 'EXIT → TAKE TEST';
+        finishBtn.onclick = () => {
+            exitChatRoom();
+            // After small delay, show the lesson history where user can click Take Test
+            setTimeout(() => {
+                interactWithTopic(currentProfile.activeTopicId);
+            }, 300);
+        };
+
+    } catch (err) {
+        console.error("Error finishing lesson:", err);
+        alert("Error finishing lesson. Please try again.");
+    }
 };
 
 window.openAssessment = async function (lessonId) {
     const mainArea = document.querySelector('.main-dashboard');
-    mainArea.innerHTML = `
-        <div class="portal-header">
-            <button class="primary-btn" onclick="interactWithTopic(currentProfile.activeTopicId)" style="padding: 10px 15px; font-size: 0.7rem; margin-bottom: 20px;"><- Back to History</button>
-            <h1>AI Assessment</h1>
-        </div>
-
-        <div class="assessment-view stats-card">
-            <div class="question-box">
-                <p><strong>Assignment:</strong></p>
-                <p>1. Explain the primary concept discussed in today's lesson.</p>
-                <p>2. Apply this concept to a real-world scenario.</p>
-                <p style="margin-top:20px; font-style:italic;">Instruction: Solve these on paper, take a photo, and upload it for AI grading.</p>
-            </div>
-
-            <div class="upload-zone" onclick="document.getElementById('file-input').click()">
-                <p>Click to Upload Photo of Workings</p>
-                <input type="file" id="file-input" style="display:none" onchange="submitAssessment('${lessonId}')">
-            </div>
-            
-            <div id="grading-result" style="margin-top: 30px; display:none;">
-                <h3 id="grade-val" style="color: #00ff00;">Grade: 85%</h3>
-                <p id="grade-feedback" class="text-dim"></p>
-                <div class="stats-card" style="margin-top:20px;">
-                    <h4>Verified Solution</h4>
-                    <p id="grade-solution" style="font-family: monospace; font-size: 0.8rem;"></p>
-                </div>
-            </div>
-        </div>
-    `;
-
-    // Hide mobile footer for focused assessment
-    const footer = document.querySelector('.mobile-footer');
-    if (footer) footer.classList.add('hidden');
-};
-
-window.submitAssessment = async function (lessonId) {
-    const resDiv = document.getElementById('grading-result');
-    resDiv.style.display = 'block';
-    resDiv.innerHTML = '<h2>AI analyzing your workings...</h2>';
 
     try {
-        const resp = await fetch(`${API_BASE}/lessons/grade`, {
-            method: 'POST',
-            body: JSON.stringify({ lessonId })
-        });
-        const result = await resp.json();
+        // Load template first
+        const templateResp = await fetch('/assessment.html');
+        const templateHtml = await templateResp.text();
+        mainArea.innerHTML = templateHtml;
 
-        resDiv.innerHTML = `
-            <h3 style="color: #00ff00;">Grade: ${result.grade}</h3>
-            <p class="text-dim">${result.feedback}</p>
-            <div class="stats-card" style="margin-top:20px;">
-                <h4>Verified IT Solution</h4>
-                <p style="font-family: monospace; font-size: 0.8rem;">${result.solution}</p>
+        // Setup back button
+        document.getElementById('back-to-history-btn').onclick = () => interactWithTopic(currentProfile.activeTopicId);
+
+        // Hide mobile footer
+        const footer = document.querySelector('.mobile-footer');
+        if (footer) footer.classList.add('hidden');
+
+        // Store lessonId for later use
+        currentProfile.activeAssessmentLessonId = lessonId;
+
+        // Generate test from AI
+        const testRes = await fetch(`${GEMINI_API_URL}generate-test`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lesson_id: lessonId })
+        });
+
+        if (!testRes.ok) {
+            const errData = await testRes.json().catch(() => ({ error: testRes.statusText }));
+            throw new Error((errData.error || 'Unknown server error') + (errData.trace ? '\n' + errData.trace : ''));
+        }
+
+        const testData = await testRes.json();
+        const test = testData.test;
+
+        // Hide loading, show test
+        document.getElementById('test-loading').style.display = 'none';
+        document.getElementById('test-questions').style.display = 'block';
+
+        // Populate test content
+        document.getElementById('assessment-subject').innerText = test.subject + ' Assessment';
+        document.getElementById('instructions-text').innerText = test.instructions;
+
+        // Render questions with math formatting
+        const questionsHtml = test.questions.map((q, i) => `
+            <div class="question-item" style="margin-bottom: 25px; padding: 20px; border: 1px solid var(--border-subtle);">
+                <p style="font-weight: bold; margin-bottom: 10px;">Question ${i + 1} (${q.marks} marks)</p>
+                <div class="question-text" style="font-size: 1rem; line-height: 1.6;">
+                    ${formatMessageContent(q.question)}
+                </div>
+            </div>
+        `).join('');
+
+        document.getElementById('questions-list').innerHTML = questionsHtml;
+
+        // Render math in questions
+        if (typeof renderMathInElement !== 'undefined') {
+            renderMathInElement(document.getElementById('questions-list'), {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false }
+                ],
+                throwOnError: false
+            });
+        }
+
+        // Setup file upload
+        document.getElementById('upload-zone').onclick = () => document.getElementById('file-input').click();
+        document.getElementById('file-input').onchange = (e) => previewAssessmentImage(e.target.files[0]);
+        document.getElementById('submit-btn').onclick = () => submitAssessment(lessonId);
+        document.getElementById('finish-assessment-btn').onclick = () => interactWithTopic(currentProfile.activeTopicId);
+
+    } catch (e) {
+        console.error('Assessment error:', e);
+        mainArea.innerHTML = `
+            <div style="padding: 40px; text-align: center;">
+                <h2>Error loading assessment</h2>
+                <p class="text-dim">${e.message}</p>
+                <button class="primary-btn" onclick="interactWithTopic(currentProfile.activeTopicId)" style="margin-top: 20px;">Back to Lessons</button>
             </div>
         `;
+    }
+};
+
+// Preview uploaded image before submission
+function previewAssessmentImage(file) {
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('preview-img').src = e.target.result;
+        document.getElementById('image-preview').style.display = 'block';
+        document.getElementById('upload-zone').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+window.submitAssessment = async function (lessonId) {
+    const fileInput = document.getElementById('file-input');
+    if (!fileInput.files[0]) {
+        alert('Please upload an image of your work first.');
+        return;
+    }
+
+    // Show loading in the submit area
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.innerText = 'AI Grading...';
+    submitBtn.disabled = true;
+
+    try {
+        // Convert image to base64
+        // Convert image to base64 with resizing (Max 1024px)
+        const file = fileInput.files[0];
+        const base64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1024;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    // Use JPEG 0.8 for good balance of size/quality
+                    resolve(canvas.toDataURL('image/jpeg', 0.8));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Call grading API
+        const res = await fetch(`${GEMINI_API_URL}grade-image`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                lesson_id: lessonId,
+                image: base64
+            })
+        });
+
+        if (!res.ok) throw new Error('Grading failed');
+
+        const result = await res.json();
+
+        // Hide test, show results
+        document.getElementById('test-questions').style.display = 'none';
+        const resultDiv = document.getElementById('grading-result');
+        resultDiv.style.display = 'block';
+
+        // Populate results
+        document.getElementById('grade-val').innerText = result.score + '%';
+        document.getElementById('grade-val').style.color = result.score >= 50 ? '#00ff00' : '#ff4d4d';
+        document.getElementById('grade-feedback').innerText = result.feedback;
+
+        // Per-question feedback
+        if (result.questionResults && result.questionResults.length > 0) {
+            const qResultsHtml = result.questionResults.map(qr => `
+                <div style="padding: 15px; border-bottom: 1px solid var(--border-subtle);">
+                    <p><strong>Question ${qr.questionId}</strong>: ${qr.marksAwarded}/${qr.marksAvailable} marks</p>
+                    <p class="text-dim" style="font-size: 0.85rem;">${qr.feedback}</p>
+                </div>
+            `).join('');
+            document.getElementById('question-results').innerHTML = qResultsHtml;
+        }
+
+        // Model solution with math rendering
+        const solutionDiv = document.getElementById('grade-solution');
+        solutionDiv.innerHTML = formatMessageContent(result.modelSolution || 'No solution available.');
+
+        if (typeof renderMathInElement !== 'undefined') {
+            renderMathInElement(solutionDiv, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false }
+                ],
+                throwOnError: false
+            });
+        }
+
     } catch (e) {
-        alert("Grading failed");
+        console.error('Grading error:', e);
+        alert('Grading failed: ' + e.message);
+        submitBtn.innerText = 'SUBMIT FOR GRADING';
+        submitBtn.disabled = false;
     }
 };
 

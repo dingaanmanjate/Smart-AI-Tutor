@@ -1,0 +1,74 @@
+<div class="portal-header">
+    <button class="primary-btn" id="back-to-history-btn"
+        style="padding: 10px 15px; font-size: 0.7rem; margin-bottom: 20px;"><strong>←</strong> Back</button>
+    <h1>AI Assessment</h1>
+    <p class="text-dim" id="assessment-subject">Subject Test</p>
+</div>
+
+<!-- Loading State -->
+<div id="test-loading" class="stats-card" style="text-align: center; padding: 40px;">
+    <h3>Generating your test...</h3>
+    <p class="text-dim">AI is creating questions based on your lesson</p>
+</div>
+
+<!-- Test Questions Section -->
+<div id="test-questions" class="assessment-view stats-card" style="display: none;">
+    <div id="test-instructions" class="question-box">
+        <p><strong>Instructions:</strong></p>
+        <p id="instructions-text">Answer all questions. Show your working where applicable.</p>
+    </div>
+
+    <div id="questions-list" style="margin-top: 20px;">
+        <!-- Questions populated by JS -->
+    </div>
+
+    <div style="margin-top: 30px; padding: 20px; border: 2px dashed var(--border-subtle); text-align: center;">
+        <p><strong>Ready to submit?</strong></p>
+        <p class="text-dim" style="margin: 10px 0;">Write your answers on paper, take a photo, and upload for AI
+            grading.</p>
+
+        <div class="upload-zone" id="upload-zone" style="margin-top: 15px;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                style="margin-bottom: 10px;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <p>Click or tap to upload photo</p>
+            <input type="file" id="file-input" style="display:none" accept="image/*">
+        </div>
+
+        <div id="image-preview" style="display: none; margin-top: 15px;">
+            <img id="preview-img" style="max-width: 100%; max-height: 200px; border: 1px solid var(--border-main);">
+            <button class="primary-btn" id="submit-btn" style="margin-top: 15px; width: 100%;">SUBMIT FOR
+                GRADING</button>
+        </div>
+    </div>
+</div>
+
+<!-- Grading Result Section -->
+<div id="grading-result" class="stats-card" style="display: none;">
+    <div style="text-align: center; padding: 20px;">
+        <h2 id="grade-val" style="font-size: 3rem; color: #00ff00; margin: 0;">--</h2>
+        <p class="text-dim">Your Score</p>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <h4>Feedback</h4>
+        <p id="grade-feedback" class="text-dim"></p>
+    </div>
+
+    <div id="question-results" style="margin-top: 20px;">
+        <!-- Per-question feedback populated by JS -->
+    </div>
+
+    <div class="stats-card" style="margin-top: 30px; background: rgba(255,255,255,0.02);">
+        <h4>Model Solution</h4>
+        <div id="grade-solution"
+            style="font-size: 0.9rem; line-height: 1.6; padding: 15px; background: var(--bg-pure); border-left: 3px solid var(--accent-blue);">
+        </div>
+    </div>
+
+    <button class="primary-btn" id="finish-assessment-btn" style="margin-top: 30px; width: 100%;">Back to
+        Lessons</button>
+</div>

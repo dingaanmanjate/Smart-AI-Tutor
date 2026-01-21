@@ -1,0 +1,54 @@
+<div class="portal-header">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+            <button class="primary-btn" onclick="renderDashboard(cognitoUser.getUsername())"
+                style="padding: 10px 15px; font-size: 0.7rem; margin-bottom: 20px;"> <strong>←</strong>Dashboard
+            </button>
+            <h1 id="portal-subject-name">Subject Portal</h1>
+            <p class="text-dim" id="portal-curriculum">Curriculum: N/A</p>
+        </div>
+        <button class="primary-btn" onclick="toggleTopicModal()"
+            style="font-size: 0.7rem; padding: 10px 15px;">+Topic</button>
+    </div>
+</div>
+
+<div class="atp-container stats-card" style="margin-top: 30px;">
+    <h3>Annual Teaching Plan (ATP) - 2026</h3>
+    <div class="atp-list" id="atp-terms-container">
+        <!-- Terms populated by JS -->
+    </div>
+</div>
+
+<!-- Add Topic Modal (Centered Popup) -->
+<div id="topic-modal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="add-topic-title">Add New Topic</h3>
+            <button class="modal-close-btn" onclick="toggleTopicModal()">×</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label>Term</label>
+                <select id="t-term">
+                    <option>Term 1</option>
+                    <option>Term 2</option>
+                    <option>Term 3</option>
+                    <option>Term 4</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Topic Name</label>
+                <input type="text" id="t-name" placeholder="e.g. Algebra Fundamentals">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <input type="text" id="t-desc" placeholder="Brief overview of the topic">
+        </div>
+        <div class="popup-actions" style="margin-top: 25px;">
+            <button class="primary-btn" id="save-topic-btn">Save Topic</button>
+            <button class="logout-btn" onclick="toggleTopicModal()" style="margin:0;">Cancel</button>
+        </div>
+    </div>
+</div>

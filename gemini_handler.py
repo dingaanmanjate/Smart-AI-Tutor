@@ -92,6 +92,7 @@ async def chat_stream(request: Request):
             })
 
         async def generate():
+            full_ai_response = ""  # Accumulate full response for DB storage
             try:
                 # 1. Connection established probe
                 yield f"data: {json.dumps({'text': 'Reflecting...'})}\n\n"
@@ -102,24 +103,25 @@ async def chat_stream(request: Request):
                 for chunk in response:
                     try:
                         if chunk.text:
-                            full_response = "" # Reset for accumulation if needed, but here we just stream
+                            full_ai_response += chunk.text  # Accumulate
                             yield f"data: {json.dumps({'text': chunk.text})}\n\n"
                             await asyncio.sleep(0.01) # Small buffer
                     except ValueError:
                         # Safety filter blocked this chunk
                         msg = " [Content Blocked by Safety Filters] "
+                        full_ai_response += msg
                         yield f"data: {json.dumps({'text': msg})}\n\n"
                 
-                # Sync back to DynamoDB (Best effort)
+                # Sync back to DynamoDB with FULL AI response
                 try:
-                    new_mats = [
+                    new_msgs = [
                         {'role': 'user', 'content': user_message + (" [Image Attached]" if image_data else "")},
-                        {'role': 'ai', 'content': "Response saved"} # Simplified for now
+                        {'role': 'ai', 'content': full_ai_response}  # Save full response
                     ]
                     lesson_table.update_item(
                         Key={'lessonId': lesson_id},
                         UpdateExpression="SET history = list_append(if_not_exists(history, :empty), :m)",
-                        ExpressionAttributeValues={':m': new_mats, ':empty': []}
+                        ExpressionAttributeValues={':m': new_msgs, ':empty': []}
                     )
                 except Exception as db_err:
                      print(f"DB Error: {db_err}")
@@ -200,7 +202,7 @@ async def grade_quiz(request: Request):
         answers = data.get("answers")
         quiz = data.get("quiz")
         
-        model = genai.GenerativeModel('gemini-3.0-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         prompt = f"""
         Grade this quiz attempt.
         Original Quiz: {json.dumps(quiz)}
@@ -234,5 +236,161 @@ async def grade_quiz(request: Request):
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+@app.post("/generate-test")
+async def generate_test(request: Request):
+    """Generate a structured test based on lesson conversation"""
+    ensure_config()
+    try:
+        data = await request.json()
+        lesson_id = data.get("lesson_id")
+        
+        res = lesson_table.get_item(Key={'lessonId': lesson_id})
+        item = res.get('Item', {})
+        history = item.get('history', [])
+        subject_name = item.get('subjectName', 'General')
+        
+        context = "\n".join([f"{h['role']}: {h['content']}" for h in history])
+        
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        prompt = f"""
+        Based on the following {subject_name} lesson conversation, generate a structured test.
+        
+        Create 3 questions that test understanding of the concepts discussed.
+        For Mathematics/Science subjects, include equations using LaTeX format (wrap in $ for inline, $$ for block).
+        
+        Return ONLY a JSON object with this structure:
+        {{
+            "subject": "{subject_name}",
+            "questions": [
+                {{
+                    "id": "q1",
+                    "question": "Question text with $LaTeX$ if needed",
+                    "type": "open_ended",
+                    "marks": 10,
+                    "expectedAnswer": "The model answer with proper formatting and $equations$ if applicable"
+                }}
+            ],
+            "totalMarks": 30,
+            "instructions": "Answer all questions. Show your working where applicable."
+        }}
+        
+        Context:
+        {context}
+        """
+        
+        response = model.generate_content(prompt)
+        
+        # Robust JSON extraction using Regex
+        import re
+        match = re.search(r'\{.*\}', response.text, re.DOTALL)
+        if match:
+            json_text = match.group(0)
+            test = json.loads(json_text)
+        else:
+             raise ValueError(f"No JSON found in response: {response.text}")
+        
+        # Store test in lesson record
+        lesson_table.update_item(
+            Key={'lessonId': lesson_id},
+            UpdateExpression="SET generatedTest = :t",
+            ExpressionAttributeValues={':t': test}
+        )
+        
+        return {"test": test}
+    except Exception as e:
+        import traceback
+        return JSONResponse(status_code=500, content={"error": str(e), "trace": traceback.format_exc()})
+
+@app.post("/grade-image")
+async def grade_image(request: Request):
+    """Grade student's uploaded work using Gemini Vision"""
+    ensure_config()
+    try:
+        import base64
+        data = await request.json()
+        lesson_id = data.get("lesson_id")
+        image_data = data.get("image")
+        
+        if not image_data:
+            raise HTTPException(status_code=400, detail="Image is required")
+        
+        # Get lesson context and test
+        res = lesson_table.get_item(Key={'lessonId': lesson_id})
+        item = res.get('Item', {})
+        subject_name = item.get('subjectName', 'General')
+        test = item.get('generatedTest', {})
+        
+        # Prepare image for Gemini
+        if "," in image_data:
+            image_data = image_data.split(",")[1]
+        
+        image_bytes = base64.b64decode(image_data)
+        
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        prompt = f"""
+        You are grading a {{subject_name}} test. Analyze this student's handwritten/typed work.
+        
+        The test questions were:
+        {{json.dumps(test.get('questions', []), indent=2)}}
+        
+        Total marks: {{test.get('totalMarks', 30)}}
+        
+        Please:
+        1. Identify each answer the student provided
+        2. Compare with expected answers
+        3. Award marks fairly
+        4. Provide constructive feedback
+        
+        Return ONLY a JSON object:
+        {{
+            "score": number (0-100 percentage),
+            "marksAwarded": number,
+            "totalMarks": number,
+            "feedback": "Overall feedback on performance",
+            "questionResults": [
+                {{
+                    "questionId": "q1",
+                    "marksAwarded": number,
+                    "marksAvailable": number,
+                    "feedback": "Specific feedback for this question"
+                }}
+            ],
+            "modelSolution": "Complete worked solution with proper formatting using $LaTeX$ for equations"
+        }}
+        """
+        
+        response = model.generate_content([
+            prompt,
+            {"mime_type": "image/jpeg", "data": image_bytes}
+        ])
+        
+        import re
+        match = re.search(r'\{.*\}', response.text, re.DOTALL)
+        if match:
+            json_text = match.group(0)
+            result = json.loads(json_text)
+        else:
+             raise ValueError(f"No JSON found in response: {response.text}")
+        
+        # Save score to lesson
+        lesson_table.update_item(
+        # ... logic continues
+            Key={'lessonId': lesson_id},
+            UpdateExpression="SET assessmentScore = :s, assessmentResult = :r, #st = :st",
+            ExpressionAttributeNames={'#st': 'status'},
+            ExpressionAttributeValues={
+                ':s': result['score'],
+                ':r': result,
+                ':st': 'completed'
+            }
+        )
+        
+        return result
+    except Exception as e:
+        import traceback
+        return JSONResponse(status_code=500, content={"error": str(e), "trace": traceback.format_exc()})
+
 # Bridge for AWS Lambda
 handler = Mangum(app, lifespan="off")
+

@@ -76,6 +76,8 @@ h3 {
     flex-direction: column;
     padding: 30px;
     box-sizing: border-box;
+    position: relative;
+    /* For popup positioning */
 }
 
 .sidebar h2 {
@@ -501,12 +503,12 @@ a {
 .chat-messages {
     flex: 1;
     overflow-y: auto;
-    padding: 20px;
-    padding-bottom: 120px;
+    padding: 15px;
+    padding-bottom: 80px;
     /* Space for the pinned input footer */
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     scrollbar-width: thin;
 }
 
@@ -544,10 +546,10 @@ a {
     bottom: 0;
     left: 0;
     width: 100%;
-    padding: 20px;
+    padding: 10px 15px;
     display: flex;
-    gap: 12px;
-    background: rgba(5, 5, 5, 0.85);
+    gap: 10px;
+    background: rgba(5, 5, 5, 0.95);
     /* Semi-transparent base */
     backdrop-filter: blur(10px);
     /* Glassmorphism effect */
@@ -673,8 +675,23 @@ a {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 1.1rem;
     flex-shrink: 0;
+}
+
+/* SVG icon styling for chat buttons */
+.chat-tool-btn svg,
+.chat-send-btn svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.chat-tool-btn svg {
+    stroke: currentColor;
+}
+
+.chat-send-btn svg {
+    fill: currentColor;
 }
 
 /* Assessment UI */
@@ -686,6 +703,7 @@ a {
     margin-bottom: 25px;
     padding: 20px;
     border-left: 3px solid var(--border-main);
+    background: rgba(255, 255, 255, 0.02);
 }
 
 .upload-zone {
@@ -694,11 +712,196 @@ a {
     text-align: center;
     cursor: pointer;
     transition: var(--transition);
+    border-radius: 8px;
 }
 
 .upload-zone:hover {
     border-color: var(--accent-blue);
     background: rgba(0, 112, 243, 0.05);
+}
+
+.upload-zone svg {
+    opacity: 0.5;
+}
+
+/* Code Blocks in Chat */
+.code-block {
+    background: #1a1a1a;
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 15px;
+    margin: 10px 0;
+    overflow-x: auto;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.inline-code {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.9em;
+}
+
+/* Math Equation Styling */
+.katex-display {
+    margin: 15px 0;
+    overflow-x: auto;
+}
+
+.katex {
+    font-size: 1.1em;
+}
+
+/* ========================================
+   POPUP & MODAL SYSTEM
+   ======================================== */
+
+/* Overlay backdrop for modals */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    z-index: 4000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+/* Centered Modal (for Add Topic) */
+.modal-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border-main);
+    padding: 30px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.25s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.modal-header h3 {
+    margin: 0;
+}
+
+.modal-close-btn {
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-main);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: var(--transition);
+}
+
+.modal-close-btn:hover {
+    border-color: #ff4d4d;
+    color: #ff4d4d;
+}
+
+/* Sidebar Popup (for Add Subject on Desktop) */
+.sidebar-popup {
+    display: none;
+    position: absolute;
+    bottom: 70px;
+    left: 10px;
+    right: 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-main);
+    padding: 20px;
+    z-index: 100;
+    animation: popupSlideUp 0.2s ease-out;
+}
+
+.sidebar-popup.active {
+    display: block;
+}
+
+@keyframes popupSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.sidebar-popup h4 {
+    margin: 0 0 15px 0;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Footer Popup (for Add Subject on Mobile) */
+.footer-popup {
+    display: none;
+    position: fixed;
+    bottom: 60px;
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-main);
+    padding: 20px;
+    z-index: 2500;
+    animation: popupSlideUp 0.2s ease-out;
+}
+
+.footer-popup.active {
+    display: block;
+}
+
+.footer-popup h4 {
+    margin: 0 0 15px 0;
+    font-size: 0.9rem;
+}
+
+.popup-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.popup-actions button {
+    flex: 1;
+    padding: 12px;
+    font-size: 0.75rem;
 }
 
 /* Base states for mobile elements (Hidden on Desktop) */
@@ -739,12 +942,18 @@ a {
 
     .dashboard-wrapper {
         flex-direction: column;
-        padding-top: 55px !important;
+        padding-top: 35px !important;
         /* Narrower header space */
-        padding-bottom: 70px !important;
+        padding-bottom: 35px !important;
         /* Narrower footer space */
         height: auto !important;
         min-height: calc(100vh - 125px);
+    }
+
+    .dashboard-wrapper:has(.chat-active),
+    .main-dashboard.chat-active~.dashboard-wrapper {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
     }
 
     .sidebar {
@@ -760,6 +969,12 @@ a {
     .main-dashboard.chat-active {
         padding: 0;
         overflow: hidden;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 3000;
     }
 
     /* Mobile Header & Footer */
@@ -920,7 +1135,7 @@ a {
     background: var(--bg-sidebar);
     padding: 0 10px;
     border-bottom: 1px solid var(--border-subtle);
-    gap: 12px;
+    gap: 2px;
     height: 45px;
     /* Compact but holds info */
     box-sizing: border-box;
@@ -964,7 +1179,7 @@ a {
 
 .chat-name-info span {
     font-size: 0.6rem;
-    color: #00ff00;
+    color: #00ffff;
 }
 
 /* Ensure full screen on mobile for chat */
@@ -976,8 +1191,8 @@ a {
 
     .chat-messages {
         height: 100%;
-        padding-bottom: 100px;
-        /* Essential clearance for fixed footer */
+        padding-bottom: 70px;
+        /* Reduced clearance for fixed footer */
     }
 
     .chat-input-area {
@@ -985,12 +1200,12 @@ a {
         /* Fixed to viewport bottom on mobile */
         bottom: 0;
         left: 0;
-        padding-bottom: env(safe-area-inset-bottom, 15px);
+        /*padding-bottom: env(safe-area-inset-bottom, 15px);*/
         /* Support modern notches */
     }
 
     .chat-header-whatsapp {
-        height: 55px;
+        height: 45px;
         /* Taller for better info display */
     }
 }

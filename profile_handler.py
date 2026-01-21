@@ -127,7 +127,7 @@ def lambda_handler(event, context):
         )
         return build_response(200, response.get('Items', []))
 
-    # STATS
+    # STATS - Include both quiz and assessment scores
     elif method == 'GET' and (path.endswith('/stats') or path == 'stats'):
         email = query_params.get('email')
         response = lesson_table.query(
@@ -138,12 +138,20 @@ def lambda_handler(event, context):
         
         stats = {}
         for item in items:
-            score = item.get('quizScore')
             subj = item.get('subjectName', 'General')
-            if score is not None:
-                if subj not in stats:
-                    stats[subj] = {'total': 0, 'count': 0}
-                stats[subj]['total'] += float(score)
+            if subj not in stats:
+                stats[subj] = {'total': 0, 'count': 0}
+            
+            # Include quiz scores
+            quiz_score = item.get('quizScore')
+            if quiz_score is not None:
+                stats[subj]['total'] += float(quiz_score)
+                stats[subj]['count'] += 1
+            
+            # Include assessment scores
+            assessment_score = item.get('assessmentScore')
+            if assessment_score is not None:
+                stats[subj]['total'] += float(assessment_score)
                 stats[subj]['count'] += 1
         
         result = []
@@ -173,12 +181,34 @@ def lambda_handler(event, context):
         elif path.endswith('/chat'):
             l_id = body.get('lessonId')
             user_msg = body.get('message')
+            ai_response = body.get('aiResponse')
+            
+            messages = [{'role': 'user', 'content': user_msg}]
+            if ai_response:
+                messages.append({'role': 'ai', 'content': ai_response})
+            
             lesson_table.update_item(
                 Key={'lessonId': l_id},
                 UpdateExpression="SET history = list_append(history, :m)",
-                ExpressionAttributeValues={':m': [{'role': 'user', 'content': user_msg}]}
+                ExpressionAttributeValues={':m': messages}
             )
             return build_response(200, {"message": "Stored"})
+
+        elif path.endswith('/finish'):
+            # Mark lesson as finished with goodbye message
+            l_id = body.get('lessonId')
+            goodbye_msg = "Great work on this lesson! You've completed the teaching session. When you're ready, exit the chat and click 'TAKE TEST' to test your knowledge. Good luck! 🎓"
+            
+            lesson_table.update_item(
+                Key={'lessonId': l_id},
+                UpdateExpression="SET #s = :s, history = list_append(history, :m)",
+                ExpressionAttributeNames={'#s': 'status'},
+                ExpressionAttributeValues={
+                    ':s': 'finished',
+                    ':m': [{'role': 'ai', 'content': goodbye_msg}]
+                }
+            )
+            return build_response(200, {"message": "Lesson finished", "goodbye": goodbye_msg})
 
         elif path.endswith('/complete'):
             l_id = body.get('lessonId')
@@ -189,6 +219,26 @@ def lambda_handler(event, context):
                 ExpressionAttributeValues={':s': 'completed'}
             )
             return build_response(200, {"message": "Lesson completed"})
+
+        elif path.endswith('/score'):
+            # Save assessment score
+            l_id = body.get('lessonId')
+            score = body.get('score')
+            feedback = body.get('feedback', '')
+            solution = body.get('solution', '')
+            
+            lesson_table.update_item(
+                Key={'lessonId': l_id},
+                UpdateExpression="SET assessmentScore = :s, assessmentFeedback = :f, assessmentSolution = :sol, #st = :st",
+                ExpressionAttributeNames={'#st': 'status'},
+                ExpressionAttributeValues={
+                    ':s': Decimal(str(score)),
+                    ':f': feedback,
+                    ':sol': solution,
+                    ':st': 'completed'
+                }
+            )
+            return build_response(200, {"message": "Score saved"})
 
     return build_response(404, {"error": "Not Found"})
 

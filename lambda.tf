@@ -207,7 +207,7 @@ resource "aws_lambda_function" "gemini_api" {
   handler       = "gemini_handler.handler" # Mangum handler
   runtime       = "python3.12"
   memory_size   = 1024
-  timeout       = 60 
+  timeout       = 300 
 
   source_code_hash = base64encode(null_resource.build_gemini_lambda.id)
 

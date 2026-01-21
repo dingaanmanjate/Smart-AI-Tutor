@@ -1,37 +1,25 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-.venv/
-venv/
-
-# Node
-node_modules/
-
-# Terraform
-.terraform/
-*.tfstate
-*.tfstate.backup
-*.tfstate.d/
-.terraform.lock.hcl
+# Terraform state and sensitive files
 terraform.tfvars
-*.auto.tfvars
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfstate.d/
+.terraform/
+.terraform.lock.hcl
 
-# Build Artifacts
-gemini_build/
+# Lambda build artifacts (large zip files)
 *.zip
+gemini_build/
+
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+
+# OS files
+.DS_Store
+Thumbs.db
 
 # IDE
 .vscode/
 .idea/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Secrets (DO NOT COMMIT)
-*.pem
-*.key
-
-# Logs
-*.log
+.gitignore

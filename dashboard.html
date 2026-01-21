@@ -12,10 +12,22 @@
 
         <div class="sidebar-subjects-header">
             <h4 class="form-group label" style="margin: 0;">ENROLLED SUBJECTS</h4>
-            <button class="add-subj-btn-mini" onclick="toggleSubjectForm()" title="Add Subject">+</button>
+            <button class="add-subj-btn-mini" onclick="toggleSubjectPopup()" title="Add Subject">+</button>
         </div>
         <div class="sidebar-subjects">
             <ul id="my-subjects-list" style="padding:0; margin:0;"></ul>
+        </div>
+
+        <!-- Sidebar Popup for Add Subject (Desktop) -->
+        <div id="sidebar-subject-popup" class="sidebar-popup">
+            <h4>Enroll in Subject</h4>
+            <p style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 10px;">Curriculum: <strong
+                    id="popup-curriculum" style="color: var(--text-main);"></strong></p>
+            <select id="popup-subj-select" style="margin: 0;"></select>
+            <div class="popup-actions">
+                <button class="primary-btn" id="popup-enroll-btn">Enroll</button>
+                <button class="logout-btn" onclick="toggleSubjectPopup()" style="margin:0;">Cancel</button>
+            </div>
         </div>
 
         <button class="logout-btn" onclick="handleLogout()">Logout</button>
@@ -44,18 +56,7 @@
             </div>
         </div>
 
-        <!-- Hidden Enrollment Card -->
-        <div id="subject-selection-area" style="display:none; margin-bottom: 30px;" class="stats-card">
-            <h3>Enroll in a New Subject</h3>
-            <p>Your Curriculum: <strong id="display-curriculum" style="color: var(--text-main);"></strong></p>
-            <div class="form-group" style="margin-top:15px;">
-                <select id="subj-select"></select>
-            </div>
-            <div style="display: flex; gap: 15px;">
-                <button class="primary-btn" id="enroll-btn" style="flex:1;">Confirm Enrollment</button>
-                <button class="logout-btn" onclick="toggleSubjectForm()" style="flex:1; margin:0;">Cancel</button>
-            </div>
-        </div>
+        <!-- Subject enrollment is now handled via popups -->
 
         <!-- Conditional Profile Setup Form -->
         <div id="profile-setup-card" style="display: none; margin-bottom: 30px;" class="stats-card">
@@ -143,8 +144,20 @@
 
 <!-- Mobile Footer -->
 <footer class="mobile-footer">
-    <button class="add-subj-btn-mini" onclick="toggleSubjectForm()">+</button>
+    <button class="add-subj-btn-mini" onclick="toggleSubjectPopup()">+</button>
     <div class="mobile-subjects-bar">
         <ul id="mobile-subjects-list"></ul>
     </div>
 </footer>
+
+<!-- Footer Popup for Add Subject (Mobile) -->
+<div id="footer-subject-popup" class="footer-popup">
+    <h4>Enroll in a New Subject</h4>
+    <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 10px;">Curriculum: <strong
+            id="footer-popup-curriculum" style="color: var(--text-main);"></strong></p>
+    <select id="footer-subj-select" style="margin: 0;"></select>
+    <div class="popup-actions">
+        <button class="primary-btn" id="footer-enroll-btn">Enroll</button>
+        <button class="logout-btn" onclick="toggleSubjectPopup()" style="margin:0;">Cancel</button>
+    </div>
+</div>

@@ -1,6 +1,6 @@
 const poolData = {
-    UserPoolId: 'af-south-1_6yj2IpYZo',
-    ClientId: '78llv188ttm7fd8vvnc71sgvo3',
+    UserPoolId: 'af-south-1_bgrjGwfdX',
+    ClientId: '74abr2bc979qs3vjfrb3rpiva7',
     endpoint: undefined // Will be updated by sync-api.sh
 };
 
