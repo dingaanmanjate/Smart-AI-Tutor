@@ -107,7 +107,7 @@ The platform now integrates **69 official CAPS Annual Teaching Plans** covering 
 
 | Feature | Description | Endpoint |
 | :--- | :--- | :--- |
-| **Real-Time AI Chat** | Gemini 2.5 Flash provides streaming, context-aware tutoring | `POST /chat-stream` |
+| **Real-Time AI Chat** | Gemini 2.0 Flash provides streaming, context-aware tutoring | `POST /chat-stream` |
 | **CAPS-Aligned Teaching** | AI uses South African context and introduces key definitions naturally | (via system prompt) |
 | **Multimodal Input** | Learners can attach images (e.g., a photo of a problem) for AI analysis | (via chat) |
 | **Quiz Generation** | AI generates a 5-question MCQ quiz based on the lesson conversation | `POST /generate-quiz` |

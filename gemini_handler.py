@@ -54,7 +54,7 @@ def get_chat_session(session_id: str, history=None, system_instruction=None):
     ensure_config()
     if session_id not in sessions:
         model = genai.GenerativeModel(
-            'gemini-2.5-flash',
+            'gemini-2.0-flash',
             system_instruction=system_instruction
         )
         formatted_history = history or []
