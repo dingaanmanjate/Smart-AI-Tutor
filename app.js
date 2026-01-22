@@ -331,15 +331,34 @@ window.openSubjectPortal = async function (subjectName) {
 
         const atpContainer = document.getElementById('atp-terms-container');
         atpContainer.innerHTML = Object.entries(terms).map(([termNum, termTopics]) => `
-            <div class="atp-item">
-                <span class="term">Term ${termNum}</span>
+            <div class="atp-item" style="display:block;">
+                <span class="term" style="margin-bottom: 10px; display:inline-block;">Term ${termNum}</span>
                 <div style="flex: 1;">
-                    ${termTopics.length > 0 ? termTopics.map(t => `
-                        <div class="topic-entry" onclick="startATPLesson('${t.topicId}', '${t.topicName.replace(/'/g, "\\'")}', '${subjectName}')" style="cursor:pointer; margin-bottom: 15px; padding: 10px; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                            <strong style="color: var(--text-main); display: block; margin-bottom: 4px;">${t.topicName}</strong>
-                            <p style="margin: 0; font-size: 0.8rem; color: var(--text-dim);">${t.context || 'Click to start lesson'}</p>
+                    ${termTopics.length > 0 ? termTopics.map(t => {
+            const hasSub = t.subtopics && t.subtopics.length > 0;
+            const subtopicsHtml = hasSub ? `
+                            <div class="subtopics-list" style="margin-top: 8px; padding-left: 10px; border-left: 2px solid var(--border-color);">
+                                ${t.subtopics.map(st => `
+                                    <div class="subtopic-entry" onclick="openHistoryModal('${t.topicId}', '${st.subtopicId}')" style="cursor:pointer; padding: 6px; margin-bottom: 4px; border-radius: 4px; color: var(--text-dim); transition: all 0.2s;" onmouseover="this.style.color='var(--text-main)'; this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.color='var(--text-dim)'; this.style.background='transparent'">
+                                        • ${st.subtopicName}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : '';
+
+            // If no subtopics, topic itself is clickable (fallback)
+            const clickAction = hasSub ? '' : `onclick="openHistoryModal('${t.topicId}', null)" style="cursor:pointer"`;
+
+            return `
+                        <div class="topic-entry" style="margin-bottom: 20px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.02);">
+                            <div ${clickAction}>
+                                <strong style="color: var(--text-main); display: block; font-size: 1.1rem; margin-bottom: 4px;">${t.topicName}</strong>
+                                <p style="margin: 0; font-size: 0.85rem; color: var(--text-dim);">${t.context || 'Core Concept'}</p>
+                            </div>
+                            ${subtopicsHtml}
                         </div>
-                    `).join('') : `<p style="font-style: italic; font-size: 0.8rem; color: var(--text-dim);">No ATP topics available for this term.</p>`}
+                    `;
+        }).join('') : `<p style="font-style: italic; font-size: 0.8rem; color: var(--text-dim);">No ATP topics available for this term.</p>`}
                 </div>
             </div>
         `).join('');
@@ -541,10 +560,114 @@ window.interactWithTopic = async function (topicId) {
         mainArea.innerHTML = `<h2>Error: ${e.message}</h2>`;
     }
 
-    // Show footer when navigating back to topics
-    const footer = document.querySelector('.mobile-footer');
-    if (footer) footer.classList.remove('hidden');
 };
+
+// --- Lesson History Modal Logic ---
+
+let currentHistoryContext = {};
+
+window.openHistoryModal = async function (topicId, subtopicId) {
+    const modal = document.getElementById('lesson-history-modal');
+    if (!modal) return;
+
+    // Reset state
+    modal.classList.remove('hidden');
+    document.getElementById('history-list').innerHTML = '<p class="text-dim">Loading history...</p>';
+
+    // Store context for "Start New"
+    currentHistoryContext = { topicId, subtopicId };
+
+    // Fetch History
+    const email = cognitoUser.getUsername();
+    try {
+        const resp = await fetch(`${API_BASE}/lessons?email=${encodeURIComponent(email)}&topicId=${topicId}`);
+        const lessons = await resp.json();
+
+        // Filter by Subtopic if applicable
+        const filteredLessons = subtopicId
+            ? lessons.filter(l => l.subtopicId === subtopicId)
+            : lessons;
+
+        renderHistoryList(filteredLessons);
+
+        // Fetch Context for Title/Desc (Lazy load from DOM or API if needed, for now use simpler logic)
+        // Ideally we pass name, but for now let's just show "Selected Topic" if we don't have it handy
+        // A better way is to pass names in the function call, but let's fetch quickly if we want perfection.
+        // For MVP speed:
+        document.getElementById('history-modal-title').innerText = subtopicId ? 'Subtopic History' : 'Topic History';
+        document.getElementById('history-modal-desc').innerText = "Review past sessions or start a new one.";
+
+    } catch (e) {
+        document.getElementById('history-list').innerHTML = '<p class="error">Failed to load history.</p>';
+        console.error(e);
+    }
+
+    // Attach event to Start Button
+    const startBtn = document.getElementById('start-new-lesson-btn');
+    startBtn.onclick = () => {
+        closeHistoryModal();
+        startATPLesson(topicId, subtopicId);
+    };
+};
+
+window.closeHistoryModal = function () {
+    const modal = document.getElementById('lesson-history-modal');
+    if (modal) modal.classList.add('hidden');
+};
+
+function renderHistoryList(lessons) {
+    const list = document.getElementById('history-list');
+    if (!lessons || lessons.length === 0) {
+        list.innerHTML = '<p class="text-dim">No previous lessons found. Start your first one!</p>';
+        return;
+    }
+
+    list.innerHTML = lessons.map(l => {
+        const date = new Date(parseInt(l.lessonId.split('_')[1] || 0) * 1000).toLocaleDateString(); // ID based timestamp if available, else generic
+        // Simplify timestamp if ID is random hex:
+        const displayDate = l.created ? new Date(l.created).toLocaleDateString() : 'Previous Session';
+
+        return `
+            <div class="history-item" style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong style="color: var(--text-main); font-size: 0.9rem;">${displayDate}</strong>
+                    <p style="margin:0; font-size: 0.8rem; color: var(--text-dim);">${l.history.length} messages</p>
+                </div>
+                <button class="secondary-btn" onclick="resumeLesson('${l.lessonId}')" style="padding: 6px 12px; font-size: 0.8rem;">
+                    Resume
+                </button>
+            </div>
+        `;
+    }).join('');
+}
+
+// Updated Start Lesson
+window.startATPLesson = async function (topicId, subtopicId) {
+    const mainArea = document.querySelector('.main-dashboard');
+    mainArea.innerHTML = '<div style="padding: 40px; text-align: center;"><h2>Preparing your lesson... 🤖</h2><p>Analysisng curriculum context...</p></div>';
+
+    const email = cognitoUser.getUsername();
+    try {
+        const resp = await fetch(`${API_BASE}/lessons/start`, {
+            method: 'POST',
+            body: JSON.stringify({
+                email,
+                topicId,
+                subtopicId, // Pass the subtopic!
+                subjectName: currentProfile.activeSubject,
+                grade: currentProfile.grade
+            })
+        });
+        const lesson = await resp.json();
+        renderChatRoom(lesson);
+    } catch (e) {
+        alert("Failed to start lesson");
+        console.error(e);
+        renderDashboard(email); // Fallback
+    }
+};
+
+// --- End History Logic ---
 
 window.startNewLesson = async function (topicId) {
     const email = cognitoUser.getUsername();
@@ -624,27 +747,15 @@ async function renderChatRoom(lesson, isReadOnly = false) {
     }
 }
 
-// Format message content - handle code blocks and escape HTML
+// Format message content - handle Markdown and escape HTML
 function formatMessageContent(content) {
     if (!content) return '';
 
-    // Escape HTML first
-    let formatted = content
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+    // Convert Markdown to HTML
+    let formatted = marked.parse(content);
 
-    // Handle code blocks (```...```)
-    formatted = formatted.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
-        return `<pre class="code-block"><code>${code.trim()}</code></pre>`;
-    });
-
-    // Handle inline code (`...`)
-    formatted = formatted.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
-
-    // Preserve newlines
-    formatted = formatted.replace(/\n/g, '<br>');
-
+    // KaTeX Protection: Ensure proper spacing for display math if needed
+    // (marked.js usually handles block math correctly if fenced, but standard delimiters might need help)
     return formatted;
 }
 

@@ -18,3 +18,31 @@
         <!-- Terms populated by JS -->
     </div>
 </div>
+
+<!-- Lesson History Modal -->
+<div id="lesson-history-modal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+        <div class="modal-header">
+            <h3 id="history-modal-title">Subtopic History</h3>
+            <button class="close-btn" onclick="closeHistoryModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p id="history-modal-desc" class="text-dim" style="margin-bottom: 20px;">
+                <!-- Description context -->
+            </p>
+
+            <div class="action-row" style="margin-bottom: 20px;">
+                <button class="primary-btn" id="start-new-lesson-btn" style="width: 100%;">
+                    Start New Lesson 🚀
+                </button>
+            </div>
+
+            <h4 style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">
+                Previous Lessons</h4>
+            <div id="history-list" class="history-list">
+                <!-- History items will be injected here -->
+                <p class="text-dim">No history yet.</p>
+            </div>
+        </div>
+    </div>
+</div>
