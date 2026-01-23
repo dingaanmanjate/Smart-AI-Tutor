@@ -1,0 +1,1020 @@
+[
+  {
+    "grade": "Grade 12",
+    "subject": "Physical Science",
+    "curriculum": [
+      {
+        "term": 1,
+        "weeks": [
+          {
+            "subtopics": [
+              "1  CONTROL TEST  Discussion and remedial work on test",
+              "Define impulse",
+              "Explain what is meant by an isolated system, internal and external forces",
+              "Homework",
+              "Impulse and safety considerations",
+              "Mind the Gap",
+              "Momentum & impulse",
+              "Newton’s laws of motion Equations of motion",
+              "PhET simulations",
+              "Previous question papers",
+              "State the principle of conservation of linear momentum",
+              "Study guides",
+              "Use the impulse- momentum theorem (F Δt = mΔv) in net calculations for a variety of situations (one dimension)",
+              "YouTube & Mindset videos"
+            ],
+            "formulas": [
+              "(F Δt = mΔv) in net"
+            ],
+            "main_topic": "MECHANICS:",
+            "formal_assessment": "None",
+            "week": 1
+          },
+          {
+            "subtopics": [
+              "Apparatus: Conservation of momentum",
+              "Apply conservation of momentum to collisions of two objects (one dimension)",
+              "Define impulse",
+              "Distinguish between elastic and inelastic collisions by calculation",
+              "Explain what is meant by an isolated system, internal and external forces",
+              "Homework",
+              "Impulse and safety considerations",
+              "Informal test",
+              "Mind the Gap",
+              "Momentum & impulse",
+              "Momentum Equations of motion",
+              "PhET simulations",
+              "Previous question papers",
+              "State the principle of conservation of linear momentum",
+              "Study guides",
+              "Use the impulse- momentum theorem (F Δt = mΔv) in net calculations for a variety of situations (one dimension)",
+              "YouTube & Mindset videos"
+            ],
+            "formulas": [
+              "(F Δt = mΔv) in net"
+            ],
+            "main_topic": "MECHANICS:",
+            "formal_assessment": "Formal practical\n(Physics):\nConservation of linear\nmomentum",
+            "week": 2
+          },
+          {
+            "subtopics": [
+              "Apparatus for experiment below",
+              "Apply conservation of momentum to collisions of two objects (one dimension)",
+              "Distinguish between elastic and inelastic collisions by calculation",
+              "Equations of motion",
+              "Explain what is meant by a projectile",
+              "Give equations for position versus time and velocity versus time for the graphs of 1D projectile motion",
+              "Homework",
+              "Mind the Gap",
+              "Momentum & impulse",
+              "PhET simulations",
+              "Previous question papers",
+              "Sketch x vs t, v vs t and a vs t graph for a free falling object, an object thrown vertically upwards, object thrown vertically downwards & bouncing objects",
+              "Study guides",
+              "Use equations of motion to determine the position, velocity, and displacement of a projectile at any given time",
+              "YouTube & Mindset videos",
+              "projectile motion"
+            ],
+            "formulas": [],
+            "main_topic": "MECHANICS:",
+            "formal_assessment": "Formal practical\n(Physics):\nDetermine the\nacceleration due to\ngravity",
+            "week": 3
+          },
+          {
+            "subtopics": [
+              "Equations of motion",
+              "Explain what is meant by a projectile",
+              "For given x vs t, v vs t or a vs t graphs, describe the motion of an object bouncing, thrown vertically upwards & thrown vertically downward and so on",
+              "For given x vs t, v vs t or a vs t graphs, determine position, displacement and velocity or acceleration at any time t",
+              "Give equations for position versus time and velocity versus time for the graphs of 1D projectile motion",
+              "Homework",
+              "Informal test",
+              "Mind the Gap",
+              "PhET simulations",
+              "Previous question papers",
+              "Sketch x vs t, v vs t and a vs t graph for a free falling object, an object thrown vertically upwards, object thrown vertically downwards & bouncing objects",
+              "Study guides",
+              "Use equations of motion to determine the position, velocity, and displacement of a projectile at any given time",
+              "YouTube & Mindset videos",
+              "projectile motion"
+            ],
+            "formulas": [],
+            "main_topic": "MECHANICS: Vertical",
+            "formal_assessment": "None",
+            "week": 4
+          },
+          {
+            "subtopics": [
+              "Chemical bonding Valency",
+              "Define organic molecules, functional group, hydrocarbon, homologous series, saturated, unsaturated, and structural isomer",
+              "For given x vs t, v vs t or a vs t graphs, describe the motion of an object bouncing, thrown vertically upwards & thrown vertically downward and so on",
+              "For given x vs t, v vs t or a vs t graphs, determine position, displacement and velocity or acceleration at any time t",
+              "Homework",
+              "MATERIALS: Organic molecules",
+              "Mind the Gap",
+              "Previous question papers",
+              "Study guides",
+              "Write IUPAC names for structural, condensed structural formulae for compounds from above series",
+              "Write condensed, structural & molecular formulae (max 8 C atoms, 1 functional group per molecule) for alkanes (no rings), alkenes (no rings), alkynes, alcohols, halo alkanes (no rings), carboxylic acids, aldehydes, ketones, esters",
+              "YouTube & Mindset videos",
+              "projectile motion"
+            ],
+            "formulas": [],
+            "main_topic": "MECHANICS: Vertical",
+            "formal_assessment": "None",
+            "week": 5
+          },
+          {
+            "subtopics": [
+              "Define organic molecules, functional group, hydrocarbon, homologous series, saturated, unsaturated, and structural isomer",
+              "Homework",
+              "Identify alkyl substituents (methyl- and ethyl-), max THREE alkyl substituents",
+              "Identify compounds that are saturated, unsaturated, structural isomers (chain, positional, functional)",
+              "Informal test",
+              "Intermolecular forces",
+              "MATERIALS: Organic molecules",
+              "Mind the Gap",
+              "Physical properties: boiling point, melting point, vapour pressure",
+              "Previous question papers",
+              "Study guides",
+              "Write IUPAC names for structural, condensed structural formulae for compounds from above series",
+              "Write IUPAC names from structural or condensed structural formulae for compounds listed (one functional group per molecule, max two functional groups for haloalkanes)",
+              "Write condensed, structural & molecular formulae (max 8 C atoms, 1 functional group per molecule) for alkanes (no rings), alkenes (no rings), alkynes, alcohols, halo alkanes (no rings), carboxylic acids, aldehydes, ketones, esters",
+              "YouTube & Mindset videos"
+            ],
+            "formulas": [],
+            "main_topic": "MATTER &",
+            "formal_assessment": "None",
+            "week": 6
+          },
+          {
+            "subtopics": [
+              "Apparatus: Chemicals and apparatus for experiment below",
+              "Classify reactions as elimination, addition, or substitution",
+              "Combustion of alkanes in excess oxygen and use as fuels",
+              "Equation & reaction conditions for the formation of an ester and IUPAC names for reactant and products",
+              "Equations and reaction conditions for addition reactions of alkenes",
+              "Homework",
+              "IUPAC naming, writing different formulae",
+              "Identify alkyl substituents (methyl- and ethyl-), max THREE alkyl substituents",
+              "Identify compounds that are saturated, unsaturated, structural isomers (chain, positional, functional)",
+              "MATERIALS: Organic molecules",
+              "Mind the Gap",
+              "Physical properties: boiling point, melting point, vapour pressure",
+              "Previous question papers",
+              "Relationship between physical properties and strength of IMF, type of functional group, chain length and branching",
+              "Study guides",
+              "Write IUPAC names from structural or condensed structural formulae for compounds listed (one functional group per molecule, max two functional groups for haloalkanes)",
+              "YouTube & Mindset videos"
+            ],
+            "formulas": [],
+            "main_topic": "MATTER &",
+            "formal_assessment": "",
+            "week": 7
+          },
+          {
+            "subtopics": [
+              "(Chemistry)",
+              "Classify reactions as elimination, addition, or substitution",
+              "Combustion of alkanes in excess oxygen and use as fuels",
+              "Equation & reaction conditions for the formation of an ester and IUPAC names for reactant and products",
+              "Equations and reaction conditions for addition reactions of alkenes",
+              "Equations and reaction conditions for elimination reactions: dehydrohalogenation of haloalkanes, cracking of alkanes, dehydration of alcohols",
+              "Equations and reaction conditions for substitution reactions: hydrolysis of halo alkanes, halogenation of alkanes",
+              "Homework",
+              "IUPAC naming, writing different formulae",
+              "Informal test",
+              "MATERIALS: Organic molecules",
+              "Mind the Gap",
+              "Preparation of three",
+              "Previous question papers",
+              "Relationship between physical properties and strength of IMF, type of functional group, chain length and branching",
+              "Study guides",
+              "YouTube & Mindset videos",
+              "alkenes with Br 2",
+              "esters OR",
+              "reactions of alkanes and"
+            ],
+            "formulas": [],
+            "main_topic": "MATTER &",
+            "formal_assessment": "Formal practical:; None",
+            "week": 8
+          },
+          {
+            "subtopics": [
+              "1  CONTROL TEST  Discussion and remedial work on test",
+              "Discussion and remedial work of control test",
+              "Equations and reaction conditions for elimination reactions: dehydrohalogenation of haloalkanes, cracking of alkanes, dehydration of alcohols",
+              "Equations and reaction conditions for substitution reactions: hydrolysis of halo alkanes, halogenation of alkanes",
+              "MATERIALS: Organic molecules",
+              "Momentum and impulse",
+              "Newton’s laws of motion",
+              "ONE PAPER (100 marks- 2 hours) 50 marks – Physics",
+              "Organic molecules",
+              "Vertical projectile motion 50 marks - Chemistry"
+            ],
+            "formulas": [],
+            "main_topic": "MATTER &",
+            "formal_assessment": "Control test",
+            "week": 9
+          },
+          {
+            "subtopics": [
+              "1  CONTROL TEST  Discussion and remedial work on test",
+              "Discussion and remedial work of control test",
+              "Momentum and impulse",
+              "Newton’s laws of motion",
+              "ONE PAPER (100 marks- 2 hours) 50 marks – Physics",
+              "Organic molecules",
+              "Vertical projectile motion 50 marks - Chemistry"
+            ],
+            "formulas": [],
+            "main_topic": "Consolidation of term",
+            "formal_assessment": "",
+            "week": 10
+          },
+          {
+            "subtopics": [
+              "1  CONTROL TEST  Discussion and remedial work on test",
+              "Discussion and remedial work of control test",
+              "Momentum and impulse",
+              "Newton’s laws of motion",
+              "ONE PAPER (100 marks- 2 hours) 50 marks – Physics",
+              "Organic molecules",
+              "Vertical projectile motion 50 marks - Chemistry"
+            ],
+            "formulas": [],
+            "main_topic": "Consolidation of term",
+            "formal_assessment": "",
+            "week": 11
+          }
+        ]
+      },
+      {
+        "term": 2,
+        "weeks": [
+          {
+            "subtopics": [
+              "Apply the work- energy theorem on horizontal, vertical, and inclined planes",
+              "Define conservative and non-conservative forces and give examples",
+              "Equations of motion",
+              "Gravitational potential and kinetic energy",
+              "Homework",
+              "Mind the Gap",
+              "Newton’s 2nd law of motion",
+              "OR Control test",
+              "Previous question papers",
+              "Show that E is mech conserved in the absence of non- conservative forces",
+              "Solve problems using the equation W = ΔE + ΔE nc k p",
+              "State the principle of conservation of mechanical energy",
+              "State the work- energy theorem",
+              "Study guides",
+              "Work, energy, and power",
+              "YouTube & Mindset videos",
+              "pHET simulations"
+            ],
+            "formulas": [
+              "W = ΔE + ΔE nc k p"
+            ],
+            "main_topic": "MECHANICS:",
+            "formal_assessment": "None",
+            "week": 1
+          },
+          {
+            "subtopics": [
+              "Apparatus for experiment below",
+              "Apply the work- energy theorem on horizontal, vertical, and inclined planes",
+              "Calculate the minimum power required of an electric motor to pump water from a borehole of a particular depth at a particular rate using W = ΔE + ΔE nc k p",
+              "Define conservative and non-conservative forces and give examples",
+              "Define power and calculate the power involved when work is done",
+              "Equations of motion",
+              "Gravitational potential and kinetic energy",
+              "Homework",
+              "Informal test",
+              "Mind the Gap",
+              "Newton’s 2nd law of motion",
+              "Perform calculations using P = Fv when ave ave an object moves at a constant speed along a rough horizontal surface or a rough inclined plane",
+              "Previous question papers",
+              "Show that E is mech conserved in the absence of non- conservative forces",
+              "Solve problems using the equation W = ΔE + ΔE nc k p",
+              "State the principle of conservation of mechanical energy",
+              "State the work- energy theorem",
+              "Study guides",
+              "Work, energy, and power",
+              "YouTube & Mindset videos",
+              "pHET simulations"
+            ],
+            "formulas": [
+              "P = Fv when ave ave an",
+              "W = ΔE + ΔE nc k p"
+            ],
+            "main_topic": "MECHANICS:",
+            "formal_assessment": "Formal practical\n(Physics): Perform\nsimple experiments\nto determine the work\ndone and power\nexpended in walking\nup (or running up) a\nflight of stairs",
+            "week": 2
+          },
+          {
+            "subtopics": [
+              "Calculate the minimum power required of an electric motor to pump water from a borehole of a particular depth at a particular rate using W = ΔE + ΔE nc k p",
+              "Define power and calculate the power involved when work is done",
+              "Graphical representation of waves",
+              "Homework",
+              "LIGHT: Doppler Effect",
+              "Mind the Gap",
+              "Perform calculations using P = Fv when ave ave an object moves at a constant speed along a rough horizontal surface or a rough inclined plane",
+              "Previous question papers",
+              "State applications of the Doppler Effect withultrasound waves in medicine, e.g. to measure the rate of blood flow or the heartbeat of a foetus in the womb Solve problems using v  v f s fL = L v  v s when EITHER source or listener moves",
+              "State the Doppler Effect and explain (using illustrations) the change in pitch observed when a source moves toward or away from a listener (sound and ultrasound)",
+              "Study guides",
+              "Wave properties: Frequency, wavelength, amplitude",
+              "Work, energy, and power",
+              "YouTube & Mindset videos",
+              "pHET simulations"
+            ],
+            "formulas": [
+              "P = Fv when ave ave an",
+              "W = ΔE + ΔE nc k p",
+              "v f s fL = L v"
+            ],
+            "main_topic": "MECHANICS:",
+            "formal_assessment": "None",
+            "week": 3
+          },
+          {
+            "subtopics": [
+              "Calculate reaction rate from given data",
+              "Define reaction rate",
+              "Energy in chemical reactions – Gr 11",
+              "Homework",
+              "Informal test",
+              "LIGHT: Doppler Effect",
+              "LIGHT: Doppler Effect  CHEMICAL CHANGE: Rate and extent of reaction",
+              "List the factors that affect the rate of chemical reactions",
+              "Mind the Gap",
+              "Previous question papers",
+              "State applications of the Doppler Effect withultrasound waves in medicine, e.g. to measure the rate of blood flow or the heartbeat of a foetus in the womb Solve problems using v  v f s fL = L v  v s when EITHER source or listener moves",
+              "State the Doppler Effect and explain (using illustrations) the change in pitch observed when a source moves toward or away from a listener (sound and ultrasound)",
+              "Study guides",
+              "Wave properties: Frequency, wavelength, amplitude",
+              "With light, explain ‘red shifts’ & use the Doppler Effect to explain why we conclude that the universe is expanding Rate of reaction",
+              "Writing of formulae and balanced equations",
+              "YouTube & Mindset videos",
+              "pHET simulations"
+            ],
+            "formulas": [
+              "v f s fL = L v"
+            ],
+            "main_topic": "WAVES, SOUND &",
+            "formal_assessment": "None",
+            "week": 4
+          },
+          {
+            "subtopics": [
+              "Answer questions and interpret data (tables or graphs) on different experimental techniques for measuring the rate of a given reaction",
+              "Apparatus: Chemicals and apparatus for experiment below",
+              "CHANGE: Rate and extent of reaction",
+              "Calculate reaction rate from given data",
+              "Define reaction rate",
+              "Define the term positive catalyst",
+              "Energy in chemical reactions – Gr 11",
+              "Explain in terms of the collision theory how the various factors affect the rate of chemical reactions",
+              "Homework",
+              "Informal test",
+              "Interpret graphs of distribution of molecular energies to explain how a catalyst, temperature and concentration affect rate",
+              "LIGHT: Doppler Effect  CHEMICAL CHANGE: Rate and extent of reaction",
+              "List the factors that affect the rate of chemical reactions",
+              "Mind the Gap",
+              "Previous question papers",
+              "Study guides",
+              "With light, explain ‘red shifts’ & use the Doppler Effect to explain why we conclude that the universe is expanding Rate of reaction",
+              "Writing of formulae and balanced equations",
+              "YouTube & Mindset videos",
+              "pHET simulations"
+            ],
+            "formulas": [],
+            "main_topic": "WAVES, SOUND &",
+            "formal_assessment": "",
+            "week": 5
+          },
+          {
+            "subtopics": [
+              "(Chemistry):",
+              "(any factor) affecting",
+              "Answer questions and interpret data (tables or graphs) on different experimental techniques for measuring the rate of a given reaction",
+              "Apparatus: Chemicals and apparatus for experiment below",
+              "CHANGE: Chemical equilibrium",
+              "CHANGE: Rate and extent of reaction",
+              "Define the term positive catalyst",
+              "Determine the effect",
+              "Energy in chemical reactions – Gr 11",
+              "Explain in terms of the collision theory how the various factors affect the rate of chemical reactions",
+              "Explain: Open & closed systems, reversible reactions, dynamic equilibrium",
+              "Homework",
+              "Interpret graphs of distribution of molecular energies to explain how a catalyst, temperature and concentration affect rate",
+              "Interpret simple graphs of equilibrium",
+              "List the factors which influence the position of an equilibrium",
+              "List the factors which influence the value of the equilibrium constant K c",
+              "Mind the Gap",
+              "OR",
+              "Practical: Demonstrate factors that influence the equilibrium of CoCℓ & HO 2 2 or NO & NO (demo) 2 2 4",
+              "Previous question papers",
+              "State Le Chatelier’s principle and use it to explain changes in equilibria",
+              "Study guides",
+              "Writing of formulae and balanced equations",
+              "YouTube & Mindset videos",
+              "and HCℓ",
+              "between Na SO 2 2 3",
+              "concentration on the",
+              "determine factors",
+              "of temperature and",
+              "rate of reaction",
+              "the rate of a reaction"
+            ],
+            "formulas": [],
+            "main_topic": "CHEMICAL",
+            "formal_assessment": "Formal practical; None",
+            "week": 6
+          },
+          {
+            "subtopics": [
+              "CHANGE: Chemical equilibrium",
+              "Explain the significance of high and low values of the equilibrium constant",
+              "Explain: Open & closed systems, reversible reactions, dynamic equilibrium",
+              "Homework",
+              "Interpret simple graphs of equilibrium",
+              "List the factors which influence the position of an equilibrium",
+              "List the factors which influence the value of the equilibrium constant K c",
+              "Mind the Gap",
+              "Perform calculations based on K values c",
+              "Previous question papers",
+              "State Le Chatelier’s principle and use it to explain changes in equilibria",
+              "Stoichiometry",
+              "Study guides",
+              "Write an expression for the equilibrium constant from a given equation",
+              "Writing of formulae and balanced equations",
+              "YouTube & Mindset videos"
+            ],
+            "formulas": [],
+            "main_topic": "CHEMICAL",
+            "formal_assessment": "None",
+            "week": 7
+          },
+          {
+            "subtopics": [
+              "CHANGE: Acids and bases",
+              "CHANGE: Chemical equilibrium",
+              "Define acids and bases according to Arrhenius and Lowry-Brønsted",
+              "Distinguish between concentrated and dilute acids/ bases",
+              "Distinguish between strong and weak acids/ bases with examples",
+              "Explain the significance of high and low values of the equilibrium constant",
+              "Homework",
+              "Identify conjugate acid-base pairs for given compounds",
+              "Informal test",
+              "Mind the Gap",
+              "Perform calculations based on K values c",
+              "Perform calculations based on titration reactions & motivate the choice of an indicator",
+              "Previous question papers",
+              "Stoichiometry",
+              "Study guides",
+              "Write an expression for the equilibrium constant from a given equation",
+              "Write neutralisation reactions of common laboratory acids and bases",
+              "Writing of formulae and balanced equations",
+              "YouTube & Mindset videos"
+            ],
+            "formulas": [],
+            "main_topic": "CHEMICAL",
+            "formal_assessment": "None",
+            "week": 8
+          },
+          {
+            "subtopics": [
+              "Apparatus: Chemicals and apparatus for experiment below",
+              "CHANGE: Acids and bases",
+              "Compare strong and weak acids by looking at pH, conductivity & reaction rate",
+              "Compare the K a and K values of b strong and weak acids and bases",
+              "Define acids and bases according to Arrhenius and Lowry-Brønsted",
+              "Define the concept of K and explain w the auto-ionisation of water",
+              "Determine the approximate pH of salts in salt hydrolysis",
+              "Distinguish between concentrated and dilute acids/ bases",
+              "Distinguish between strong and weak acids/ bases with examples",
+              "Explain the pH scale and calculate pH values of strong acids and strong bases",
+              "Homework",
+              "Identify conjugate acid-base pairs for given compounds",
+              "Informal test",
+              "Mind the Gap",
+              "Perform calculations based on titration reactions & motivate the choice of an indicator",
+              "Practical: Titration of a weak acid against a strong base to determine the concentration of the strong base",
+              "Previous question papers",
+              "Stoichiometry",
+              "Study guides",
+              "Write neutralisation reactions of common laboratory acids and bases",
+              "Writing of formulae and balanced equations",
+              "YouTube & Mindset videos"
+            ],
+            "formulas": [],
+            "main_topic": "CHEMICAL",
+            "formal_assessment": "Formal practical:\n(Chemistry)\nDetermine the\nunknown\nconcentration of an\nacid or base by\ntitration against a\nstandard solution",
+            "week": 9
+          },
+          {
+            "subtopics": [
+              "75 marks - Chemistry",
+              "75 marks – Physics",
+              "CHANGE: Acids and bases",
+              "Compare strong and weak acids by looking at pH, conductivity & reaction rate",
+              "Compare the K a and K values of b strong and weak acids and bases",
+              "Define the concept of K and explain w the auto-ionisation of water",
+              "Determine the approximate pH of salts in salt hydrolysis",
+              "Explain the pH scale and calculate pH values of strong acids and strong bases",
+              "Homework",
+              "Informal test",
+              "Mind the Gap",
+              "OR Control test",
+              "Paper 1 – 150 marks, 3 hrs AND",
+              "Paper 2 – 150 marks, 3 hrs OR CONTROL TEST (150 marks – 3 hours)",
+              "Previous question papers",
+              "Stoichiometry",
+              "Study guides",
+              "TWO PAPERS",
+              "Writing of formulae and balanced equations",
+              "YouTube & Mindset videos"
+            ],
+            "formulas": [],
+            "main_topic": "CHEMICAL",
+            "formal_assessment": "Control test or June\nexamination",
+            "week": 10
+          },
+          {
+            "subtopics": [
+              "75 marks - Chemistry",
+              "75 marks – Physics",
+              "OR Control test",
+              "Paper 1 – 150 marks, 3 hrs AND",
+              "Paper 2 – 150 marks, 3 hrs OR CONTROL TEST (150 marks – 3 hours)",
+              "TWO PAPERS"
+            ],
+            "formulas": [],
+            "main_topic": "June examination",
+            "formal_assessment": "",
+            "week": 11
+          }
+        ]
+      },
+      {
+        "term": 3,
+        "weeks": [
+          {
+            "subtopics": [
+              "Corrections",
+              "Discussion, corrections, remedial work  ELECTRICITY & MAGNETISM: Electric circuits",
+              "Discussion, corrections, remedial work of June control test or exam Electric circuits",
+              "Electric circuits from Grade 11",
+              "Homework",
+              "Mind the Gap",
+              "Previous question papers",
+              "Solve problems involving current, voltage and resistance for circuits containing arrangements of resistors in series and in parallel (maximum four resistors excluding internal resistance)",
+              "Study guides",
+              "YouTube & Mindset videos",
+              "pHET simulations"
+            ],
+            "formulas": [],
+            "main_topic": "CONTROL TEST:",
+            "formal_assessment": "None",
+            "week": 1
+          },
+          {
+            "subtopics": [
+              "Apparatus for experiment below",
+              "Electric circuits from Grade 11",
+              "Explain the term internal resistance",
+              "Homework",
+              "Informal test",
+              "Internal resistance of a battery",
+              "MAGNETISM: Electric circuits",
+              "Mind the Gap",
+              "Previous question papers",
+              "Solve circuit problems using ε =IR + Ir or ext ε = V + V load int resistance",
+              "Solve problems, with internal resistance, for circuits containing arrangements of resistors in series and in parallel (maximum four resistors)",
+              "Study guides",
+              "YouTube & Mindset videos",
+              "and equivalent resistance of",
+              "pHET simulations",
+              "resistors in series & parallel"
+            ],
+            "formulas": [
+              "ε =IR + Ir or ext ε"
+            ],
+            "main_topic": "ELECTRICITY &",
+            "formal_assessment": "Formal practical (Physics):",
+            "week": 2
+          },
+          {
+            "subtopics": [
+              "Draw and interpret sketch graphs of voltage vs time and current vs time for an AC circuit",
+              "Electromagnetic induction",
+              "Explain the functions of components of motors and give examples of uses of motors",
+              "Give examples of uses of AC & DC generators & functions of components",
+              "Hand rules for direction of induced current",
+              "Homework",
+              "MAGNETISM: Electrodynamics",
+              "Mind the Gap",
+              "Practical: Functioning of a simple electric motor (demonstration)",
+              "Previous question papers",
+              "State the advantages of alternating current over direct current",
+              "State the energy conversion in generators & use principle of electro-magnetic induction to explain how generators work",
+              "State the energy conversion in motors & use motor effect to explain how motors work",
+              "Study guides",
+              "YouTube & Mindset videos",
+              "pHET simulations"
+            ],
+            "formulas": [],
+            "main_topic": "ELECTRICITY &",
+            "formal_assessment": "None",
+            "week": 3
+          },
+          {
+            "subtopics": [
+              "Define the term rms for an alternating voltage or an alternating current",
+              "Define threshold frequency, f o",
+              "Define work function, W o",
+              "Describe the photoelectric effect and state its significance",
+              "Electrical power",
+              "Homework",
+              "Informal test",
+              "MAGNETISM: Electrodynamics  M & M: Optical phenomena and properties of materials",
+              "Mind the Gap",
+              "Previous question papers",
+              "Solve problems using I max I = rms √2 V max V = rms √2 P =I2 R ave rms V2 rms P = ave R P =V I ave rmsrms P =V I ave rmsrms = ½ I V max max (For purely resistive circuit) Optical phenomena and properties of materials",
+              "Study guides",
+              "YouTube & Mindset videos",
+              "pHET simulations"
+            ],
+            "formulas": [
+              "2 P =I2 R ave rms V2 rms P",
+              "2 V max V = rms",
+              "I max I = rms",
+              "P =V I ave",
+              "ave R P =V I ave"
+            ],
+            "main_topic": "ELECTRICITY &",
+            "formal_assessment": "None",
+            "week": 4
+          },
+          {
+            "subtopics": [
+              "E =W+ K , where o max E = hf and W = hf and o o K = ½ m(v )2 max max",
+              "Explain the difference between atomic absorption spectra and atomic emission spectra",
+              "Explain the effect of intensity and frequency on the photoelectric effect",
+              "Explain the formation of atomic spectra by referring to energy transition",
+              "Graphical representation of waves",
+              "Homework",
+              "Informal test",
+              "Mind the Gap",
+              "Optical phenomena and properties of materials",
+              "Perform calculations using the photoelectric equation:",
+              "Previous question papers",
+              "Study guides",
+              "Understand that the photo-electric effect demonstrates the particle nature of light",
+              "Wave properties: frequency, wavelength, amplitude",
+              "YouTube & Mindset videos",
+              "pHET simulations"
+            ],
+            "formulas": [
+              "E =W+ K",
+              "hf and o o K = ½ m(v )2 max max",
+              "o max E = hf and W"
+            ],
+            "main_topic": "MATTER & MATERIALS:",
+            "formal_assessment": "None",
+            "week": 5
+          },
+          {
+            "subtopics": [
+              "Calculate emf for a galvanic cell",
+              "Define a galvanic cell",
+              "Define an anode and cathode in terms of oxidation and reduction",
+              "Define an electrolyte Galvanic cells",
+              "Define oxidation & reduction in terms of electron transfer & oxidation numbers",
+              "Define oxidising & reducing agents in terms of oxidation and reduction",
+              "Electrochemical reactions",
+              "Explain that V decreases cell as [product ions] increases and [reactant ions] decreases and V = 0 cell when equilibrium is reached, (the cell is ‘flat’)",
+              "Homework",
+              "Mind the Gap",
+              "Predict in which half-cell oxidation/reduction takes place",
+              "Predict the movement of ions and the direction of electron flow in external circuit",
+              "Previous question papers",
+              "Redox reactions",
+              "State the function of salt bridge",
+              "State the standard conditions under which standard electrode potentials are determined",
+              "Study guides",
+              "Use cell notation or diagrams to represent a galvanic cell",
+              "Write half-reactions at each electrode & the overall cell reaction",
+              "YouTube & Mindset videos",
+              "pHET simulations"
+            ],
+            "formulas": [
+              "and V = 0 cell when"
+            ],
+            "main_topic": "CHEMICAL CHANGE:",
+            "formal_assessment": "None",
+            "week": 6
+          },
+          {
+            "subtopics": [
+              "Apparatus: Chemicals and apparatus for experiment below",
+              "Define an electrolytic cell",
+              "Describe the movement of ions in the solution",
+              "Describe the standard hydrogen electrode and explain its role as the reference electrode",
+              "Describe, using half- reactions and the equation for the overall cell reaction as well as the layout of the particular cell using a schematic diagram, the following electrolytic processes: o The decomposition of copper(II) chloride o Electroplating, e g the electroplating of an iron spoon with silver, nickel o Refining of copper o The electrolysis of a concentrated solution of sodium chloride",
+              "Electrochemical reactions",
+              "Explain how standard electrode potentials can be determined using the reference electrode, state the convention regarding positive and negative values Electrolytic cells",
+              "Homework",
+              "Informal test",
+              "Mind the Gap",
+              "Previous question papers",
+              "Redox reactions",
+              "State the direction of electron flow in the external circuit",
+              "Study guides",
+              "Verify the reactions that take",
+              "Write down the overall cell reaction",
+              "Write equations for the half- reactions at the anode and cathode",
+              "YouTube & Mindset videos",
+              "electrolytic cell",
+              "pHET simulations",
+              "place in a galvanic cell and an"
+            ],
+            "formulas": [],
+            "main_topic": "CHEMICAL CHANGE:",
+            "formal_assessment": "Formal practical (Chemistry):",
+            "week": 7
+          },
+          {
+            "subtopics": [
+              "Chemical change (92)",
+              "Electric circuits (Gr 11) Paper 2",
+              "Electricity and magnetism (55)",
+              "Electrostatics (Gr 11)",
+              "Energy and chemical change (Gr 11)",
+              "Intermolecular forces (Gr 11)",
+              "Matter & materials (15) PAPER 2: 150 marks",
+              "Matter & materials (58) The following Gr 10 and 11 topics will form part of the two papers: Paper 1:",
+              "Mechanics (65)",
+              "Mind the Gap",
+              "NA",
+              "Newton’s laws (Gr 11)",
+              "P1: 3 hrs P2: 3 hrs",
+              "Previous question papers",
+              "Representing chemical change (Gr 10)",
+              "Stoichiometry (application only) (Gr 11)",
+              "Study guides",
+              "Waves, sound, and light (15)",
+              "YouTube & Mindset videos",
+              "pHET simulations"
+            ],
+            "formulas": [],
+            "main_topic": "TRIAL EXAMINATION",
+            "formal_assessment": "Trial examination",
+            "week": 8
+          },
+          {
+            "subtopics": [
+              "Chemical change (92)",
+              "Electric circuits (Gr 11) Paper 2",
+              "Electricity and magnetism (55)",
+              "Electrostatics (Gr 11)",
+              "Energy and chemical change (Gr 11)",
+              "Intermolecular forces (Gr 11)",
+              "Matter & materials (15) PAPER 2: 150 marks",
+              "Matter & materials (58) The following Gr 10 and 11 topics will form part of the two papers: Paper 1:",
+              "Mechanics (65)",
+              "Mind the Gap",
+              "NA",
+              "Newton’s laws (Gr 11)",
+              "P1: 3 hrs P2: 3 hrs",
+              "Previous question papers",
+              "Representing chemical change (Gr 10)",
+              "Stoichiometry (application only) (Gr 11)",
+              "Study guides",
+              "Waves, sound, and light (15)",
+              "YouTube & Mindset videos",
+              "pHET simulations"
+            ],
+            "formulas": [],
+            "main_topic": "TRIAL EXAMINATION",
+            "formal_assessment": "Trial examination",
+            "week": 9
+          },
+          {
+            "subtopics": [
+              "Chemical change (92)",
+              "Electric circuits (Gr 11) Paper 2",
+              "Electricity and magnetism (55)",
+              "Electrostatics (Gr 11)",
+              "Energy and chemical change (Gr 11)",
+              "Intermolecular forces (Gr 11)",
+              "Matter & materials (15) PAPER 2: 150 marks",
+              "Matter & materials (58) The following Gr 10 and 11 topics will form part of the two papers: Paper 1:",
+              "Mechanics (65)",
+              "Mind the Gap",
+              "NA",
+              "Newton’s laws (Gr 11)",
+              "P1: 3 hrs P2: 3 hrs",
+              "Previous question papers",
+              "Representing chemical change (Gr 10)",
+              "Stoichiometry (application only) (Gr 11)",
+              "Study guides",
+              "Waves, sound, and light (15)",
+              "YouTube & Mindset videos",
+              "pHET simulations"
+            ],
+            "formulas": [],
+            "main_topic": "TRIAL EXAMINATION",
+            "formal_assessment": "Trial examination",
+            "week": 10
+          },
+          {
+            "subtopics": [
+              "Chemical change (92)",
+              "Electric circuits (Gr 11) Paper 2",
+              "Electricity and magnetism (55)",
+              "Electrostatics (Gr 11)",
+              "Energy and chemical change (Gr 11)",
+              "Intermolecular forces (Gr 11)",
+              "Matter & materials (15) PAPER 2: 150 marks",
+              "Matter & materials (58) The following Gr 10 and 11 topics will form part of the two papers: Paper 1:",
+              "Mechanics (65)",
+              "Mind the Gap",
+              "NA",
+              "Newton’s laws (Gr 11)",
+              "P1: 3 hrs P2: 3 hrs",
+              "Previous question papers",
+              "Representing chemical change (Gr 10)",
+              "Stoichiometry (application only) (Gr 11)",
+              "Study guides",
+              "Waves, sound, and light (15)",
+              "YouTube & Mindset videos",
+              "pHET simulations"
+            ],
+            "formulas": [],
+            "main_topic": "TRIAL EXAMINATION",
+            "formal_assessment": "Trial examination",
+            "week": 11
+          }
+        ]
+      },
+      {
+        "term": 4,
+        "weeks": [
+          {
+            "subtopics": [
+              "NA",
+              "Trial exam question papers",
+              "work of trial examination"
+            ],
+            "formulas": [],
+            "main_topic": "TRIAL EXAM: Discussion",
+            "formal_assessment": "None",
+            "week": 1
+          },
+          {
+            "subtopics": [
+              "NA",
+              "Trial exam question papers",
+              "work of trial examination"
+            ],
+            "formulas": [],
+            "main_topic": "TRIAL EXAM: Discussion",
+            "formal_assessment": "None",
+            "week": 2
+          },
+          {
+            "subtopics": [
+              "Homework",
+              "Informal test",
+              "Mindset & YouTube videos",
+              "NA",
+              "Previous question papers",
+              "Simulations",
+              "Study guides"
+            ],
+            "formulas": [],
+            "main_topic": "CONSOLIDATION AND REVISION",
+            "formal_assessment": "None",
+            "week": 3
+          },
+          {
+            "subtopics": [
+              "Homework",
+              "Informal test",
+              "Mindset & YouTube videos",
+              "NA",
+              "Previous question papers",
+              "Simulations",
+              "Study guides"
+            ],
+            "formulas": [],
+            "main_topic": "CONSOLIDATION AND REVISION",
+            "formal_assessment": "None",
+            "week": 4
+          },
+          {
+            "subtopics": [
+              "Chemical change (92) Rate and extent of reaction, chemical equilibrium, acids and bases, representing chemical change (Gr 10), Energy and chemical change (Gr 11), stoichiometry (application only) (Gr 11)",
+              "Electricity and magnetism (55) Electric circuits, electrodynamics, electrostatics (Gr 11), Electric circuits (Gr 11)",
+              "Matter & materials (15) Optical phenomena and properties of materials PAPER 2: 150 marks",
+              "Matter & materials (58) Organic molecules, intermolecular forces (Gr 11)",
+              "Mechanics (65) Momentum and impulse, vertical projectile motion, work, energy and power, Newton’s laws (Gr 11)",
+              "NA",
+              "P1: 3 hrs P2: 3 hrs",
+              "Waves, sound, and light (15) Doppler Effect"
+            ],
+            "formulas": [],
+            "main_topic": "FINAL EXAMINATION",
+            "formal_assessment": "Final examination",
+            "week": 5
+          },
+          {
+            "subtopics": [
+              "Chemical change (92) Rate and extent of reaction, chemical equilibrium, acids and bases, representing chemical change (Gr 10), Energy and chemical change (Gr 11), stoichiometry (application only) (Gr 11)",
+              "Electricity and magnetism (55) Electric circuits, electrodynamics, electrostatics (Gr 11), Electric circuits (Gr 11)",
+              "Matter & materials (15) Optical phenomena and properties of materials PAPER 2: 150 marks",
+              "Matter & materials (58) Organic molecules, intermolecular forces (Gr 11)",
+              "Mechanics (65) Momentum and impulse, vertical projectile motion, work, energy and power, Newton’s laws (Gr 11)",
+              "NA",
+              "P1: 3 hrs P2: 3 hrs",
+              "Waves, sound, and light (15) Doppler Effect"
+            ],
+            "formulas": [],
+            "main_topic": "FINAL EXAMINATION",
+            "formal_assessment": "Final examination",
+            "week": 6
+          },
+          {
+            "subtopics": [
+              "Chemical change (92) Rate and extent of reaction, chemical equilibrium, acids and bases, representing chemical change (Gr 10), Energy and chemical change (Gr 11), stoichiometry (application only) (Gr 11)",
+              "Electricity and magnetism (55) Electric circuits, electrodynamics, electrostatics (Gr 11), Electric circuits (Gr 11)",
+              "Matter & materials (15) Optical phenomena and properties of materials PAPER 2: 150 marks",
+              "Matter & materials (58) Organic molecules, intermolecular forces (Gr 11)",
+              "Mechanics (65) Momentum and impulse, vertical projectile motion, work, energy and power, Newton’s laws (Gr 11)",
+              "NA",
+              "P1: 3 hrs P2: 3 hrs",
+              "Waves, sound, and light (15) Doppler Effect"
+            ],
+            "formulas": [],
+            "main_topic": "FINAL EXAMINATION",
+            "formal_assessment": "Final examination",
+            "week": 7
+          },
+          {
+            "subtopics": [
+              "Chemical change (92) Rate and extent of reaction, chemical equilibrium, acids and bases, representing chemical change (Gr 10), Energy and chemical change (Gr 11), stoichiometry (application only) (Gr 11)",
+              "Electricity and magnetism (55) Electric circuits, electrodynamics, electrostatics (Gr 11), Electric circuits (Gr 11)",
+              "Matter & materials (15) Optical phenomena and properties of materials PAPER 2: 150 marks",
+              "Matter & materials (58) Organic molecules, intermolecular forces (Gr 11)",
+              "Mechanics (65) Momentum and impulse, vertical projectile motion, work, energy and power, Newton’s laws (Gr 11)",
+              "NA",
+              "P1: 3 hrs P2: 3 hrs",
+              "Waves, sound, and light (15) Doppler Effect"
+            ],
+            "formulas": [],
+            "main_topic": "FINAL EXAMINATION",
+            "formal_assessment": "Final examination",
+            "week": 8
+          },
+          {
+            "subtopics": [
+              "Chemical change (92) Rate and extent of reaction, chemical equilibrium, acids and bases, representing chemical change (Gr 10), Energy and chemical change (Gr 11), stoichiometry (application only) (Gr 11)",
+              "Electricity and magnetism (55) Electric circuits, electrodynamics, electrostatics (Gr 11), Electric circuits (Gr 11)",
+              "Matter & materials (15) Optical phenomena and properties of materials PAPER 2: 150 marks",
+              "Matter & materials (58) Organic molecules, intermolecular forces (Gr 11)",
+              "Mechanics (65) Momentum and impulse, vertical projectile motion, work, energy and power, Newton’s laws (Gr 11)",
+              "NA",
+              "P1: 3 hrs P2: 3 hrs",
+              "Waves, sound, and light (15) Doppler Effect"
+            ],
+            "formulas": [],
+            "main_topic": "FINAL EXAMINATION",
+            "formal_assessment": "Final examination",
+            "week": 9
+          },
+          {
+            "subtopics": [
+              "Chemical change (92) Rate and extent of reaction, chemical equilibrium, acids and bases, representing chemical change (Gr 10), Energy and chemical change (Gr 11), stoichiometry (application only) (Gr 11)",
+              "Electricity and magnetism (55) Electric circuits, electrodynamics, electrostatics (Gr 11), Electric circuits (Gr 11)",
+              "Matter & materials (15) Optical phenomena and properties of materials PAPER 2: 150 marks",
+              "Matter & materials (58) Organic molecules, intermolecular forces (Gr 11)",
+              "Mechanics (65) Momentum and impulse, vertical projectile motion, work, energy and power, Newton’s laws (Gr 11)",
+              "NA",
+              "P1: 3 hrs P2: 3 hrs",
+              "Waves, sound, and light (15) Doppler Effect"
+            ],
+            "formulas": [],
+            "main_topic": "FINAL EXAMINATION",
+            "formal_assessment": "Final examination",
+            "week": 10
+          }
+        ]
+      }
+    ]
+  }
+]
