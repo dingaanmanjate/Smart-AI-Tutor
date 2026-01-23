@@ -1,9 +1,15 @@
 <div class="portal-header">
     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div>
-            <button class="primary-btn" onclick="renderDashboard(cognitoUser.getUsername())"
-                style="padding: 10px 15px; font-size: 0.7rem; margin-bottom: 20px;"> <strong>←</strong>Dashboard
-            </button>
+            <div style="display:flex; gap:10px; margin-bottom: 20px;">
+                <button class="primary-btn" onclick="renderDashboard(cognitoUser.getUsername())"
+                    style="padding: 10px 15px; font-size: 0.7rem;"> <strong>←</strong>Dashboard
+                </button>
+                <button class="primary-btn" id="subject-history-btn"
+                    style="padding: 10px 15px; font-size: 0.7rem; background: var(--bg-card); border: 1px solid var(--border-main);">
+                    <strong>⌛</strong>Chat History
+                </button>
+            </div>
             <h1 id="portal-subject-name">Subject Portal</h1>
             <p class="text-dim" id="portal-curriculum">Curriculum: N/A</p>
             <p class="text-dim" id="portal-grade" style="margin-top: 5px;"></p>
@@ -20,7 +26,7 @@
 </div>
 
 <!-- Lesson History Modal -->
-<div id="lesson-history-modal" class="modal-overlay hidden">
+<div id="lesson-history-modal" class="modal-overlay">
     <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
         <div class="modal-header">
             <h3 id="history-modal-title">Subtopic History</h3>

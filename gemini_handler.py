@@ -31,17 +31,17 @@ def ensure_config():
             print(f"ERROR: Failed to configure Gemini. {e}")
             raise e
 
+print("INFO: Gemini Handler Loading...")
 app = FastAPI()
 
 # Enable CORS
-# CORS is handled by AWS Lambda Function URL configuration
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"], 
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 async def root():
@@ -54,7 +54,7 @@ def get_chat_session(session_id: str, history=None, system_instruction=None):
     ensure_config()
     if session_id not in sessions:
         model = genai.GenerativeModel(
-            'gemini-2.0-flash',
+            'gemini-2.5-flash',
             system_instruction=system_instruction
         )
         formatted_history = history or []

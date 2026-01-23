@@ -107,7 +107,7 @@ The platform now integrates **69 official CAPS Annual Teaching Plans** covering 
 
 | Feature | Description | Endpoint |
 | :--- | :--- | :--- |
-| **Real-Time AI Chat** | Gemini 2.0 Flash provides streaming, context-aware tutoring | `POST /chat-stream` |
+| **Real-Time AI Chat** | Gemini 2.5 Flash provides streaming, context-aware tutoring | `POST /chat-stream` |
 | **CAPS-Aligned Teaching** | AI uses South African context and introduces key definitions naturally | (via system prompt) |
 | **Multimodal Input** | Learners can attach images (e.g., a photo of a problem) for AI analysis | (via chat) |
 | **Quiz Generation** | AI generates a 5-question MCQ quiz based on the lesson conversation | `POST /generate-quiz` |
@@ -140,6 +140,38 @@ The platform now integrates **69 official CAPS Annual Teaching Plans** covering 
 - **Voice Input**: Speech-to-text via Web Speech API for hands-free learning.
 - **Dark Mode Dashboard**: Sleek, modern learner dashboard with circular navigation and stat cards.
 - **Role Selection**: Learner/Tutor toggle at login with appropriate access restrictions.
+
+---
+
+## 🚧 Challenges Faced (Engineering Journey)
+
+### 1. The "Deleted URL" Incident
+**Issue:** During aggressive debugging of a 403 Forbidden error on the streaming endpoint, the Lambda Function URL was manually deleted and recreated via CLI. This generated a completely new URL (`wzbegjfl...`), but the frontend (`app.js`) remained hardcoded to the old, now deleted URL (`de7hbdd...`).
+**Resolution:** This mismatch caused persistent 403 errors (Resource Not Found on the old URL), mistakenly attributed to IAM permissions. The fix involved manually updating the frontend with the active URL and implementing a more robust sync script (`sync-api.sh`) to automate this link.
+
+### 2. Streaming vs. Buffer
+**Issue:** Enabling `RESPONSE_STREAM` invoke mode for real-time AI responses caused friction with the `Mangum` ASGI adapter on AWS Lambda.
+**Resolution:** We confirmed that proper streaming requires specific configuration in both Terraform (`invoke_mode = "RESPONSE_STREAM"`) and the Lambda handler. The debugging process involved isolating the issue by toggling between `BUFFERED` and `RESPONSE_STREAM` modes to differentiate between configuration errors and permission errors.
+
+### 3. Model Versioning (2026 Context)
+**Issue:** The codebase initially referenced `gemini-1.5-flash`, which was outdated for the current (2026) context, leading to potential "Model Not Found" exceptions.
+**Resolution:** Updated all backend handlers to use the standardized `gemini-2.5-flash` model.
+
+---
+
+## 🔮 Future Improvements
+
+### 1. VPC Integration for Enhanced Security
+Currently, our Lambda functions run in the default Lambda VPC (public internet access). To enhance security, especially for enterprise deployments:
+- **Private Subnets:** Move Lambdas into a private subnet within a custom VPC.
+- **VPC Endpoints:** Use VPC Endpoints (PrivateLink) to securely access DynamoDB, S3, and SSM without traffic effectively traversing the public internet.
+- **NAT Gateway:** Deploy a NAT Gateway to allow the private Lambdas to still reach the external Gemini API while remaining unaddressable from the outside world.
+
+### 2. Advanced Analytics
+- Implement QuickSight dashboards drawing from DynamoDB streams to give educators deep insights into learner performance across the entire ATP curriculum.
+
+### 3. Offline Support
+- Implement PWA (Progressive Web App) features with local caching to support learners with intermittent internet connectivity.
 
 ---
 

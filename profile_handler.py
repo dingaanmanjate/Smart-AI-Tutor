@@ -71,8 +71,18 @@ def lambda_handler(event, context):
         # Scan curriculum table to get unique grades
         response = curriculum_table.scan(ProjectionExpression='grade')
         items = response.get('Items', [])
-        # Get unique grades and sort them
-        unique_grades = sorted(set(item['grade'] for item in items if 'grade' in item), key=int)
+        # Get unique grades
+        grades = list(set(item['grade'] for item in items if 'grade' in item))
+        
+        # Sort helper
+        def extract_grade_num(g):
+            try:
+                # Extract digits from "Grade 10" -> 10
+                return int(''.join(filter(str.isdigit, str(g))))
+            except:
+                return 0
+                
+        unique_grades = sorted(grades, key=extract_grade_num)
         return build_response(200, unique_grades)
 
     # GET ATP Curriculum Subjects by Grade
@@ -171,6 +181,72 @@ def lambda_handler(event, context):
         
         return build_response(200, {"message": "Enrolled successfully"})
 
+    # PUT User Curriculum Selection (Grade + Subjects)
+    elif method == 'PUT' and (path.endswith('/profile/curriculum') or '/profile/curriculum' in path):
+        body = json.loads(event.get('body', '{}'))
+        email = body.get('email')
+        grade = body.get('grade')
+        selected_subjects = body.get('subjects', [])  # List of subject names
+        
+        if not email:
+            return build_response(400, {"error": "email required"})
+        
+        if not grade:
+            return build_response(400, {"error": "grade required"})
+        
+        # Build curriculum IDs for each selected subject
+        curriculum_ids = [f"CAPS#{grade}#{subj}" for subj in selected_subjects]
+        
+        user_table.update_item(
+            Key={'email': email},
+            UpdateExpression="SET grade = :g, selectedSubjects = :s, curriculumIds = :c",
+            ExpressionAttributeValues={
+                ':g': grade,
+                ':s': selected_subjects,
+                ':c': curriculum_ids
+            }
+        )
+        return build_response(200, {"message": "Curriculum selection saved", "curriculumIds": curriculum_ids})
+
+    # GET Available Subjects for User's Grade (convenience endpoint)
+    elif method == 'GET' and (path.endswith('/profile/available-subjects') or '/profile/available-subjects' in path):
+        email = query_params.get('email')
+        if not email:
+            return build_response(400, {"error": "email required"})
+        
+        # Get user's grade
+        user_resp = user_table.get_item(Key={'email': email})
+        user = user_resp.get('Item', {})
+        grade = user.get('grade')
+        
+        if not grade:
+            return build_response(200, {"subjects": [], "message": "No grade set for user"})
+        
+        # Get available subjects for that grade
+        curr_resp = curriculum_table.query(
+            IndexName='SubjectGradeIndex',
+            KeyConditionExpression=boto3.dynamodb.conditions.Key('grade').eq(grade)
+        )
+        subjects = [item.get('subjectName') for item in curr_resp.get('Items', []) if item.get('subjectName')]
+        
+        return build_response(200, {"grade": grade, "subjects": sorted(subjects)})
+
+    # UPLOAD PROFILE PICTURE
+    elif method == 'POST' and (path.endswith('/profile/picture') or '/profile/picture' in path):
+        body = json.loads(event.get('body', '{}'))
+        email = body.get('email')
+        picture_data = body.get('profilePicture') # Base64 string
+
+        if not email or not picture_data:
+            return build_response(400, {"error": "email and profilePicture required"})
+
+        user_table.update_item(
+            Key={'email': email},
+            UpdateExpression="SET profilePicture = :p",
+            ExpressionAttributeValues={':p': picture_data}
+        )
+        return build_response(200, {"message": "Profile picture updated"})
+
     # LESSONS
     elif method == 'GET' and (path.endswith('/lessons') or path == 'lessons'):
         lesson_id = query_params.get('lessonId')
@@ -180,10 +256,17 @@ def lambda_handler(event, context):
 
         email = query_params.get('email')
         topic_id = query_params.get('topicId')
-        response = lesson_table.query(
-            IndexName='UserTopicIndex',
-            KeyConditionExpression=boto3.dynamodb.conditions.Key('email').eq(email) & boto3.dynamodb.conditions.Key('topicId').eq(topic_id)
-        )
+        
+        if topic_id:
+            response = lesson_table.query(
+                IndexName='UserTopicIndex',
+                KeyConditionExpression=boto3.dynamodb.conditions.Key('email').eq(email) & boto3.dynamodb.conditions.Key('topicId').eq(topic_id)
+            )
+        else:
+            response = lesson_table.query(
+                IndexName='UserTopicIndex',
+                KeyConditionExpression=boto3.dynamodb.conditions.Key('email').eq(email)
+            )
         return build_response(200, response.get('Items', []))
 
     # STATS - Include both quiz and assessment scores

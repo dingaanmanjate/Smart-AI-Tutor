@@ -202,14 +202,14 @@ output "api_url" {
 resource "aws_lambda_function" "gemini_api" {
   depends_on    = [null_resource.build_gemini_lambda]
   filename      = "gemini_handler.zip"
-  function_name = "GeminiStreamingAPI"
+  function_name = "GeminiTutorAPI"
   role          = aws_iam_role.lambda_role.arn
   handler       = "gemini_handler.handler" # Mangum handler
   runtime       = "python3.12"
   memory_size   = 1024
   timeout       = 300 
 
-  source_code_hash = base64encode(null_resource.build_gemini_lambda.id)
+  source_code_hash = filebase64sha256("gemini_handler.zip")
 
   environment {
     variables = {
@@ -226,7 +226,7 @@ resource "aws_ssm_parameter" "gemini_key" {
 }
 
 resource "aws_lambda_permission" "gemini_url_permission" {
-  statement_id           = "AllowFunctionUrlInvoke"
+  statement_id           = "AllowFunctionUrlInvokePublic"
   action                 = "lambda:InvokeFunctionUrl"
   function_name          = aws_lambda_function.gemini_api.function_name
   principal              = "*"
@@ -236,13 +236,14 @@ resource "aws_lambda_permission" "gemini_url_permission" {
 resource "aws_lambda_function_url" "gemini_url" {
   function_name      = aws_lambda_function.gemini_api.function_name
   authorization_type = "NONE"
+  invoke_mode        = "RESPONSE_STREAM"
 
   cors {
     allow_credentials = false
     allow_origins     = ["*"]
     allow_methods     = ["*"]
-    allow_headers     = ["date", "keep-alive", "content-type", "authorization", "x-api-key"]
-    expose_headers    = ["keep-alive", "date"]
+    allow_headers     = ["*"]
+    expose_headers    = ["*"]
     max_age           = 86400
   }
 }

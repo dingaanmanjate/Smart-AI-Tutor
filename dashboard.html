@@ -8,6 +8,10 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <h2 id="sidebar-name">Learner</h2>
+            <button class="primary-btn" id="sidebar-history-btn"
+                style="padding: 5px 10px; font-size: 0.65rem; margin-top: 10px; background: rgba(255,255,255,0.05); width: 100%;">
+                ⌛ View Chat History
+            </button>
         </div>
 
         <div class="sidebar-subjects-header">
@@ -38,8 +42,12 @@
         <div class="top-row">
             <!-- Profile Card -->
             <div class="profile-card-new">
-                <div class="profile-img-container">
-                    <img src="penup_20250719_132735.jpg" alt="Learner Profile">
+                <div class="profile-img-container" onclick="triggerProfilePictureUpload()">
+                    <img id="profile-img" src="" alt="Profile" style="display: none;">
+                    <div id="profile-initials" class="profile-initials">?</div>
+                    <div class="profile-img-overlay">📷</div>
+                    <input type="file" id="profile-img-input" accept="image/*" style="display: none;"
+                        onchange="handleProfilePictureChange(event)">
                 </div>
                 <div class="profile-info">
                     <h1 id="prof-full-name">Name Surname</h1>

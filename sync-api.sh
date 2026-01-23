@@ -13,10 +13,11 @@ if [ -z "$API_URL" ] || [ "$API_URL" == "null" ]; then
 fi
 
 # 2. Update the API_BASE and GEMINI_API_URL constants in app.js
-# Remove trailing slash from GEMINI_URL if present
+# Remove trailing slash from URLs if present
 GEMINI_URL_CLEAN=${GEMINI_URL%/}
-sed -i "s|const API_BASE = \".*\";|const API_BASE = \"$API_URL\";|" app.js
-sed -i "s|const GEMINI_API_URL = \".*\";|const GEMINI_API_URL = \"$GEMINI_URL_CLEAN/\";|" app.js
+API_URL_CLEAN=${API_URL%/}
+sed -i "s|const API_BASE = \".*\";|const API_BASE = \"$API_URL_CLEAN\";|" app.js
+sed -i "s|const GEMINI_API_URL = \".*\";|const GEMINI_API_URL = \"$GEMINI_URL_CLEAN\";|" app.js
 
 # 3. Update poolData in auth.js
 sed -i "s|UserPoolId: '.*'|UserPoolId: '$USER_POOL_ID'|" auth.js

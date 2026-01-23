@@ -1,7 +1,77 @@
-const API_BASE = "https://ia3l0uc788.execute-api.af-south-1.amazonaws.com/prod/";
-const GEMINI_API_URL = "https://jhthoghclmear3dzu2r6ftstfa0zqhvc.lambda-url.af-south-1.on.aws/"; // Populated by sync-api.sh
+const API_BASE = "https://bijgd4p1f2.execute-api.af-south-1.amazonaws.com/prod";
+const GEMINI_API_URL = "https://wzbegjfl2xvhllxnzbnltiwjaq0fomcx.lambda-url.af-south-1.on.aws"; // Populated by sync-api.sh
 // Global state to prevent UI crashes when switching views
 let currentProfile = {};
+
+// Profile Picture Functions
+function displayProfilePicture(profile) {
+    const img = document.getElementById('profile-img');
+    const initials = document.getElementById('profile-initials');
+    if (!img || !initials) return;
+
+    if (profile.profilePicture) {
+        // Show uploaded image
+        img.src = profile.profilePicture;
+        img.style.display = 'block';
+        initials.style.display = 'none';
+    } else {
+        // Show initials fallback
+        img.style.display = 'none';
+        initials.style.display = 'flex';
+        const firstInitial = (profile.name || '?')[0].toUpperCase();
+        const lastInitial = (profile.surname || '')[0]?.toUpperCase() || '';
+        initials.innerText = firstInitial + lastInitial;
+    }
+}
+
+window.triggerProfilePictureUpload = function () {
+    document.getElementById('profile-img-input')?.click();
+};
+
+window.handleProfilePictureChange = async function (event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+    }
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        alert('Image must be smaller than 2MB');
+        return;
+    }
+
+    // Convert to Base64
+    const reader = new FileReader();
+    reader.onload = async function (e) {
+        const base64 = e.target.result;
+
+        // Show preview immediately
+        const img = document.getElementById('profile-img');
+        const initials = document.getElementById('profile-initials');
+        if (img) {
+            img.src = base64;
+            img.style.display = 'block';
+        }
+        if (initials) initials.style.display = 'none';
+
+        // Save to profile
+        const email = cognitoUser?.getUsername();
+        if (!email) return;
+
+        try {
+            await fetch(`${API_BASE}/profile/picture`, {
+                method: 'POST',
+                body: JSON.stringify({ email, profilePicture: base64 })
+            });
+            currentProfile.profilePicture = base64;
+        } catch (err) {
+            console.error('Failed to save profile picture:', err);
+        }
+    };
+    reader.readAsDataURL(file);
+};
 
 window.checkUserSession = function () {
     cognitoUser = userPool.getCurrentUser();
@@ -62,6 +132,11 @@ window.renderDashboard = async function (email) {
         if (document.getElementById('mobile-name')) {
             document.getElementById('mobile-name').innerText = profile.name || 'Learner';
         }
+
+        const sidebarHistoryBtn = document.getElementById('sidebar-history-btn');
+        if (sidebarHistoryBtn) {
+            sidebarHistoryBtn.onclick = () => interactWithTopic(null, "Your History");
+        }
         document.getElementById('prof-full-name').innerText = fullName;
         document.getElementById('prof-curriculum').innerText = profile.curriculum || 'Set your curriculum';
         document.getElementById('prof-grade').innerText = profile.grade ? `Grade ${profile.grade}` : 'Set your grade';
@@ -74,6 +149,9 @@ window.renderDashboard = async function (email) {
         document.getElementById('p-surname').value = profile.surname || '';
         document.getElementById('p-grade').value = profile.grade || '8';
         document.getElementById('p-curriculum').value = profile.curriculum || 'CAPS';
+
+        // Display profile picture or initials
+        displayProfilePicture(profile);
 
         // Set visibility of setup card
         const setupCard = document.getElementById('profile-setup-card');
@@ -115,6 +193,7 @@ window.renderDashboard = async function (email) {
 
         renderCriticalCards(subjects);
 
+        loadGrades();
         loadSubjectsForPopup();
     } catch (e) {
         dashboard.innerHTML = `
@@ -158,7 +237,7 @@ async function loadGrades() {
         const currentVal = select.getAttribute('data-current') || select.value;
 
         select.innerHTML = grades.map(g => `
-            <option value="${g}" ${g == currentVal ? 'selected' : ''}>Grade ${g}</option>
+            <option value="${g}" ${g == currentVal ? 'selected' : ''}>${g}</option>
         `).join('') || '<option value="">No grades found</option>';
 
         // If user already has a grade, select it
@@ -292,11 +371,14 @@ window.openSubjectPortal = async function (subjectName) {
 
     // 2. Get grade and build curriculumId
     const curriculum = currentProfile.curriculum || "CAPS";
-    const grade = currentProfile.grade || "10";
+    const grade = currentProfile.grade || "Grade 10"; // Default to full string if stored, or construct it
 
-    // Build curriculumId matching our ATP data format
-    const subjectSlug = subjectName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    const curriculumId = `${subjectSlug}-grade${grade}-2023`;
+    // Ensure grade is in "Grade X" format if it's just a number
+    const gradeString = grade.toString().toLowerCase().includes('grade') ? grade : `Grade ${grade}`;
+
+    // Build curriculumId matching our ATP data format: CAPS#Grade 12#Physical Science
+    // We use the original subjectName from the button (case sensitive match to DB is best)
+    const curriculumId = `${curriculum}#${gradeString}#${subjectName}`;
 
     mainArea.innerHTML = `<div style="padding: 40px; text-align: center;"><h2>Loading ${subjectName} ATP...</h2></div>`;
 
@@ -313,6 +395,7 @@ window.openSubjectPortal = async function (subjectName) {
 
         const templateHtml = await templateResp.text();
         const topics = await topicsResp.json();
+        console.log('API Response Topics:', topics); // DEBUG LOG
 
         // Inject template
         mainArea.innerHTML = templateHtml;
@@ -321,6 +404,14 @@ window.openSubjectPortal = async function (subjectName) {
         document.getElementById('portal-subject-name').innerText = `${subjectName} Portal`;
         document.getElementById('portal-curriculum').innerText = `Curriculum: ${curriculum}`;
         document.getElementById('portal-grade').innerText = `Grade: ${grade}`;
+
+        const historyBtn = document.getElementById('subject-history-btn');
+        if (historyBtn) {
+            historyBtn.onclick = () => {
+                currentProfile.activeTopicName = "All Subject History";
+                interactWithTopic(null, "Subject History");
+            };
+        }
 
         // Group topics by term and render
         const terms = { 1: [], 2: [], 3: [], 4: [] };
@@ -336,24 +427,23 @@ window.openSubjectPortal = async function (subjectName) {
                 <div style="flex: 1;">
                     ${termTopics.length > 0 ? termTopics.map(t => {
             const hasSub = t.subtopics && t.subtopics.length > 0;
+            const rawTopicName = t.mainTopic || t.topicName || 'Week ' + t.week;
+            const rawContext = t.formalAssessment || t.context || 'Core Concept';
+
             const subtopicsHtml = hasSub ? `
                             <div class="subtopics-list" style="margin-top: 8px; padding-left: 10px; border-left: 2px solid var(--border-color);">
-                                ${t.subtopics.map(st => `
-                                    <div class="subtopic-entry" onclick="openHistoryModal('${t.topicId}', '${st.subtopicId}')" style="cursor:pointer; padding: 6px; margin-bottom: 4px; border-radius: 4px; color: var(--text-dim); transition: all 0.2s;" onmouseover="this.style.color='var(--text-main)'; this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.color='var(--text-dim)'; this.style.background='transparent'">
-                                        • ${st.subtopicName}
-                                    </div>
-                                `).join('')}
+                                ${t.subtopics.map(st => {
+                const rawSubName = st.content || st.subtopicName || 'Untitled Subtopic';
+                return `<div class="subtopic-entry" data-topic-id="${t.topicId}" data-subtopic-id="${st.subtopicId}" data-topic-name="${rawTopicName.replace(/"/g, '&quot;')}" data-subtopic-name="${rawSubName.replace(/"/g, '&quot;')}" style="cursor:pointer; padding: 6px; margin-bottom: 4px; border-radius: 4px; color: var(--text-dim); transition: all 0.2s;">• ${rawSubName}</div>`;
+            }).join('')}
                             </div>
                         ` : '';
 
-            // If no subtopics, topic itself is clickable (fallback)
-            const clickAction = hasSub ? '' : `onclick="openHistoryModal('${t.topicId}', null)" style="cursor:pointer"`;
-
             return `
                         <div class="topic-entry" style="margin-bottom: 20px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.02);">
-                            <div ${clickAction}>
-                                <strong style="color: var(--text-main); display: block; font-size: 1.1rem; margin-bottom: 4px;">${t.topicName}</strong>
-                                <p style="margin: 0; font-size: 0.85rem; color: var(--text-dim);">${t.context || 'Core Concept'}</p>
+                            <div class="topic-header" data-topic-id="${t.topicId}" data-topic-name="${rawTopicName.replace(/"/g, '&quot;')}" ${hasSub ? '' : 'style="cursor:pointer"'}>
+                                <strong style="color: var(--text-main); display: block; font-size: 1.1rem; margin-bottom: 4px;">${rawTopicName}</strong>
+                                <p style="margin: 0; font-size: 0.85rem; color: var(--text-dim);">${rawContext}</p>
                             </div>
                             ${subtopicsHtml}
                         </div>
@@ -362,6 +452,24 @@ window.openSubjectPortal = async function (subjectName) {
                 </div>
             </div>
         `).join('');
+
+        // Attach click handlers using event delegation (safe from quote issues)
+        atpContainer.addEventListener('click', function (e) {
+            const subtopicEl = e.target.closest('.subtopic-entry');
+            const topicEl = e.target.closest('.topic-header');
+
+            if (subtopicEl) {
+                const topicId = subtopicEl.dataset.topicId;
+                const subtopicId = subtopicEl.dataset.subtopicId;
+                const topicName = subtopicEl.dataset.topicName;
+                const subtopicName = subtopicEl.dataset.subtopicName;
+                interactWithTopic(topicId, subtopicName || topicName, subtopicId);
+            } else if (topicEl && topicEl.style.cursor === 'pointer') {
+                const topicId = topicEl.dataset.topicId;
+                const topicName = topicEl.dataset.topicName;
+                interactWithTopic(topicId, topicName);
+            }
+        });
 
         // Store for later use
         currentProfile.activeCurriculumId = curriculumId;
@@ -487,7 +595,11 @@ window.handleLogout = function () {
 document.addEventListener('DOMContentLoaded', window.checkUserSession);
 // --- AI Lesson Interaction Logic ---
 
-window.interactWithTopic = async function (topicId) {
+window.interactWithTopic = async function (topicId, topicName, subtopicId) {
+    if (topicId) currentProfile.activeTopicId = topicId;
+    if (topicName) currentProfile.activeTopicName = topicName;
+    if (subtopicId) currentProfile.activeSubtopicId = subtopicId;
+
     const mainArea = document.querySelector('.main-dashboard');
     const email = cognitoUser.getUsername();
 
@@ -497,17 +609,29 @@ window.interactWithTopic = async function (topicId) {
         // Load template and data in parallel
         const [templateResp, dataResp] = await Promise.all([
             fetch('/lesson-history.html'),
-            fetch(`${API_BASE}/lessons?email=${encodeURIComponent(email)}&topicId=${encodeURIComponent(topicId)}`)
+            fetch(`${API_BASE}/lessons?email=${encodeURIComponent(email)}&topicId=${encodeURIComponent(topicId || '')}`)
         ]);
 
         const templateHtml = await templateResp.text();
-        const lessons = await dataResp.json();
+        let lessons = await dataResp.json();
+
+        // Filter by topic OR subject if topicId is null
+        if (topicId) {
+            lessons = lessons.filter(l => l.topicId === topicId);
+        } else if (currentProfile.activeSubject) {
+            lessons = lessons.filter(l => l.subjectName === currentProfile.activeSubject);
+        }
+
+        if (subtopicId) {
+            lessons = lessons.filter(l => l.subtopicId === subtopicId);
+        }
 
         // Inject template
         mainArea.innerHTML = templateHtml;
 
         // Populate dynamic content
-        document.getElementById('topic-title').innerText = `Topic: ${topicId}`;
+        const displayTitle = topicName || currentProfile.activeTopicName || topicId.split('#').pop() || topicId;
+        document.getElementById('topic-title').innerText = `Topic: ${displayTitle}`;
         document.getElementById('back-to-topics-btn').onclick = () => openSubjectPortal(currentProfile.activeSubject);
         document.getElementById('start-lesson-btn').onclick = () => startNewLesson(topicId);
 
@@ -566,12 +690,22 @@ window.interactWithTopic = async function (topicId) {
 
 let currentHistoryContext = {};
 
-window.openHistoryModal = async function (topicId, subtopicId) {
+window.openHistoryModal = async function (topicId, subtopicId, topicName, subtopicName) {
+    console.log("Opening history modal for:", topicId, subtopicId); // DEBUG
+
+    // Decode names (safe from quote breaking)
+    if (topicName && topicName !== 'null') topicName = decodeURIComponent(topicName);
+    if (subtopicName && subtopicName !== 'null') subtopicName = decodeURIComponent(subtopicName);
+
     const modal = document.getElementById('lesson-history-modal');
-    if (!modal) return;
+    if (!modal) {
+        console.error("History modal element not found in DOM!");
+        return;
+    }
+    console.log("Modal found, adding active class.");
 
     // Reset state
-    modal.classList.remove('hidden');
+    modal.classList.add('active');
     document.getElementById('history-list').innerHTML = '<p class="text-dim">Loading history...</p>';
 
     // Store context for "Start New"
@@ -580,8 +714,13 @@ window.openHistoryModal = async function (topicId, subtopicId) {
     // Fetch History
     const email = cognitoUser.getUsername();
     try {
-        const resp = await fetch(`${API_BASE}/lessons?email=${encodeURIComponent(email)}&topicId=${topicId}`);
+        console.log("RAW topicId received:", topicId);
+        console.log("Encoded topicId:", encodeURIComponent(topicId));
+        const url = `${API_BASE}/lessons?email=${encodeURIComponent(email)}&topicId=${encodeURIComponent(topicId)}`;
+        console.log("Full URL:", url);
+        const resp = await fetch(url);
         const lessons = await resp.json();
+        console.log("History loaded:", lessons);
 
         // Filter by Subtopic if applicable
         const filteredLessons = subtopicId
@@ -590,12 +729,13 @@ window.openHistoryModal = async function (topicId, subtopicId) {
 
         renderHistoryList(filteredLessons);
 
-        // Fetch Context for Title/Desc (Lazy load from DOM or API if needed, for now use simpler logic)
-        // Ideally we pass name, but for now let's just show "Selected Topic" if we don't have it handy
-        // A better way is to pass names in the function call, but let's fetch quickly if we want perfection.
-        // For MVP speed:
-        document.getElementById('history-modal-title').innerText = subtopicId ? 'Subtopic History' : 'Topic History';
-        document.getElementById('history-modal-desc').innerText = "Review past sessions or start a new one.";
+        // Update Title with Context
+        let title = "Topic History";
+        if (subtopicName && subtopicName !== 'null') title = subtopicName;
+        else if (topicName && topicName !== 'null') title = topicName;
+
+        document.getElementById('history-modal-title').innerText = title;
+        document.getElementById('history-modal-desc').innerText = `Review past sessions or start a new lesson for "${title}".`;
 
     } catch (e) {
         document.getElementById('history-list').innerHTML = '<p class="error">Failed to load history.</p>';
@@ -612,7 +752,7 @@ window.openHistoryModal = async function (topicId, subtopicId) {
 
 window.closeHistoryModal = function () {
     const modal = document.getElementById('lesson-history-modal');
-    if (modal) modal.classList.add('hidden');
+    if (modal) modal.classList.remove('active');
 };
 
 function renderHistoryList(lessons) {
@@ -659,6 +799,8 @@ window.startATPLesson = async function (topicId, subtopicId) {
             })
         });
         const lesson = await resp.json();
+        currentProfile.activeTopicId = topicId;
+        // topicName might not be passed to startATPLesson, let's ensure it is if possible
         renderChatRoom(lesson);
     } catch (e) {
         alert("Failed to start lesson");
@@ -784,7 +926,12 @@ window.exitChatRoom = function () {
     const footer = document.querySelector('.mobile-footer');
     if (footer) footer.classList.remove('hidden');
 
-    interactWithTopic(currentProfile.activeTopicId);
+    // Go back to topic history view
+    if (currentProfile.activeTopicId) {
+        interactWithTopic(currentProfile.activeTopicId, currentProfile.activeTopicName);
+    } else {
+        openSubjectPortal(currentProfile.activeSubject);
+    }
 };
 
 window.sendChatMessage = async function (lessonId) {
@@ -813,7 +960,7 @@ window.sendChatMessage = async function (lessonId) {
     }
 
     try {
-        const response = await fetch(`${GEMINI_API_URL}chat-stream`, {
+        const response = await fetch(`${GEMINI_API_URL}/chat-stream`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -892,7 +1039,7 @@ window.takeQuiz = async function (lessonId) {
     box.scrollTop = box.scrollHeight;
 
     try {
-        const res = await fetch(`${GEMINI_API_URL}generate-quiz`, {
+        const res = await fetch(`${GEMINI_API_URL}/generate-quiz`, {
             method: 'POST',
             body: JSON.stringify({ lesson_id: lessonId })
         });
@@ -943,7 +1090,7 @@ window.submitQuiz = async function (lessonId) {
     quizDiv.innerHTML = "<h4>Grading your attempt... 🎓</h4>";
 
     try {
-        const res = await fetch(`${GEMINI_API_URL}grade-quiz`, {
+        const res = await fetch(`${GEMINI_API_URL}/grade-quiz`, {
             method: 'POST',
             body: JSON.stringify({ lesson_id: lessonId, quiz, answers })
         });
@@ -1025,7 +1172,7 @@ window.openAssessment = async function (lessonId) {
         currentProfile.activeAssessmentLessonId = lessonId;
 
         // Generate test from AI
-        const testRes = await fetch(`${GEMINI_API_URL}generate-test`, {
+        const testRes = await fetch(`${GEMINI_API_URL}/generate-test`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ lesson_id: lessonId })
@@ -1145,7 +1292,7 @@ window.submitAssessment = async function (lessonId) {
         });
 
         // Call grading API
-        const res = await fetch(`${GEMINI_API_URL}grade-image`, {
+        const res = await fetch(`${GEMINI_API_URL}/grade-image`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
