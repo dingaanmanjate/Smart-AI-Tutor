@@ -54,6 +54,11 @@ if [ ! -z "$S3_BUCKET" ] && [ "$S3_BUCKET" != "null" ]; then
         --exclude "sync-api.sh" \
         --exclude "task.md" \
         --exclude "node_modules/*" \
+        --exclude "FET_ATPs_Organized/*" \
+        --exclude "extracted_atp_data.json" \
+        --exclude "response.json" \
+        --exclude "terraform.tfvars" \
+        --exclude ".gitignore" \
         --delete
     echo "✅ S3 Sync Complete."
 else

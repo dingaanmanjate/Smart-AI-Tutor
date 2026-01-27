@@ -236,7 +236,7 @@ resource "aws_lambda_permission" "gemini_url_permission" {
 resource "aws_lambda_function_url" "gemini_url" {
   function_name      = aws_lambda_function.gemini_api.function_name
   authorization_type = "NONE"
-  invoke_mode        = "RESPONSE_STREAM"
+  invoke_mode        = "BUFFERED"
 
   cors {
     allow_credentials = false
