@@ -480,33 +480,6 @@ window.openSubjectPortal = async function (subjectName) {
     }
 };
 
-// Start a lesson directly from ATP topic
-window.startATPLesson = async function (topicId, topicName, subjectName) {
-    const email = cognitoUser.getUsername();
-    const grade = currentProfile.grade || "";
-
-    try {
-        const resp = await fetch(`${API_BASE}/lessons/start`, {
-            method: 'POST',
-            body: JSON.stringify({
-                email,
-                topicId,
-                subjectName,
-                grade
-            })
-        });
-        const lesson = await resp.json();
-        renderChatRoom(lesson);
-    } catch (e) {
-        alert("Failed to start lesson: " + e.message);
-    }
-};
-
-window.interactWithTopic = function (topicId) {
-    alert("Further interaction for topic " + topicId + " coming soon!");
-};
-
-
 
 async function renderCriticalCards(userSubjects) {
     const grid = document.getElementById('critical-cards-grid');
@@ -595,6 +568,35 @@ window.handleLogout = function () {
 document.addEventListener('DOMContentLoaded', window.checkUserSession);
 // --- AI Lesson Interaction Logic ---
 
+// Start a lesson directly from ATP topic
+window.startATPLesson = async function (topicId, topicName, subjectName) {
+    const email = cognitoUser.getUsername();
+    const grade = currentProfile.grade || "";
+
+    try {
+        const resp = await fetch(`${API_BASE}/lessons/start`, {
+            method: 'POST',
+            body: JSON.stringify({
+                email,
+                topicId,
+                subjectName,
+                grade
+            })
+        });
+        const lesson = await resp.json();
+        renderChatRoom(lesson);
+    } catch (e) {
+        alert("Failed to start lesson: " + e.message);
+    }
+};
+
+// Start a new lesson (wrapper for startATPLesson)
+window.startNewLesson = function(topicId) {
+    const subject = currentProfile.activeSubject;
+    const topicName = currentProfile.activeTopicName;
+    startATPLesson(topicId, topicName, subject);
+};
+
 window.interactWithTopic = async function (topicId, topicName, subtopicId) {
     if (topicId) currentProfile.activeTopicId = topicId;
     if (topicName) currentProfile.activeTopicName = topicName;
@@ -609,7 +611,7 @@ window.interactWithTopic = async function (topicId, topicName, subtopicId) {
         // Load template and data in parallel
         const [templateResp, dataResp] = await Promise.all([
             fetch('/lesson-history.html'),
-            fetch(`${API_BASE}/lessons?email=${encodeURIComponent(email)}&topicId=${encodeURIComponent(topicId || '')}`)
+            fetch(`${API_BASE}/lessons?email=${encodeURIComponent(email)}&topicId=${encodeURIComponent(topicId || '')}&t=${new Date().getTime()}`)
         ]);
 
         const templateHtml = await templateResp.text();
@@ -622,20 +624,20 @@ window.interactWithTopic = async function (topicId, topicName, subtopicId) {
             lessons = lessons.filter(l => l.subjectName === currentProfile.activeSubject);
         }
 
-        if (subtopicId) {
-            lessons = lessons.filter(l => l.subtopicId === subtopicId);
-        }
+        // if (subtopicId) {
+        //     lessons = lessons.filter(l => l.subtopicId === subtopicId);
+        // }
 
         // Inject template
         mainArea.innerHTML = templateHtml;
 
         // Populate dynamic content
-        const displayTitle = topicName || currentProfile.activeTopicName || topicId.split('#').pop() || topicId;
+        const displayTitle = topicName || currentProfile.activeTopicName || (topicId ? topicId.split('#').pop() : 'Lesson History');
         document.getElementById('topic-title').innerText = `Topic: ${displayTitle}`;
         document.getElementById('back-to-topics-btn').onclick = () => openSubjectPortal(currentProfile.activeSubject);
         document.getElementById('start-lesson-btn').onclick = () => startNewLesson(topicId);
 
-        // Render lesson cards
+        // Render lesson cards immediately - NO MATH RENDERING HERE
         const container = document.getElementById('lessons-container');
         if (lessons.length > 0) {
             container.innerHTML = lessons.map(l => {
@@ -645,7 +647,6 @@ window.interactWithTopic = async function (topicId, topicName, subtopicId) {
 
                 let buttonsHtml = '';
                 if (l.status === 'finished') {
-                    // Finished but not tested yet - prominent TAKE TEST button
                     buttonsHtml = `
                         <div style="display:flex; gap:10px;">
                             <button class="primary-btn" onclick="viewRecap('${l.lessonId}')" style="font-size: 0.7rem; flex:1;">RECAP</button>
@@ -653,7 +654,6 @@ window.interactWithTopic = async function (topicId, topicName, subtopicId) {
                         </div>
                     `;
                 } else if (l.status === 'completed') {
-                    // Fully completed with score
                     buttonsHtml = `
                         <div style="display:flex; gap:10px;">
                             <button class="primary-btn" onclick="viewRecap('${l.lessonId}')" style="font-size: 0.7rem; flex:1;">RECAP</button>
@@ -661,7 +661,6 @@ window.interactWithTopic = async function (topicId, topicName, subtopicId) {
                         </div>
                     `;
                 } else {
-                    // Teaching in progress
                     buttonsHtml = `<button class="primary-btn" onclick="resumeLesson('${l.lessonId}')" style="font-size: 0.7rem; width:100%;">RESUME</button>`;
                 }
 
@@ -683,155 +682,11 @@ window.interactWithTopic = async function (topicId, topicName, subtopicId) {
     } catch (e) {
         mainArea.innerHTML = `<h2>Error: ${e.message}</h2>`;
     }
-
-};
-
-// --- Lesson History Modal Logic ---
-
-let currentHistoryContext = {};
-
-window.openHistoryModal = async function (topicId, subtopicId, topicName, subtopicName) {
-    console.log("Opening history modal for:", topicId, subtopicId); // DEBUG
-
-    // Decode names (safe from quote breaking)
-    if (topicName && topicName !== 'null') topicName = decodeURIComponent(topicName);
-    if (subtopicName && subtopicName !== 'null') subtopicName = decodeURIComponent(subtopicName);
-
-    const modal = document.getElementById('lesson-history-modal');
-    if (!modal) {
-        console.error("History modal element not found in DOM!");
-        return;
-    }
-    console.log("Modal found, adding active class.");
-
-    // Reset state
-    modal.classList.add('active');
-    document.getElementById('history-list').innerHTML = '<p class="text-dim">Loading history...</p>';
-
-    // Store context for "Start New"
-    currentHistoryContext = { topicId, subtopicId };
-
-    // Fetch History
-    const email = cognitoUser.getUsername();
-    try {
-        console.log("RAW topicId received:", topicId);
-        console.log("Encoded topicId:", encodeURIComponent(topicId));
-        const url = `${API_BASE}/lessons?email=${encodeURIComponent(email)}&topicId=${encodeURIComponent(topicId)}`;
-        console.log("Full URL:", url);
-        const resp = await fetch(url);
-        const lessons = await resp.json();
-        console.log("History loaded:", lessons);
-
-        // Filter by Subtopic if applicable
-        const filteredLessons = subtopicId
-            ? lessons.filter(l => l.subtopicId === subtopicId)
-            : lessons;
-
-        renderHistoryList(filteredLessons);
-
-        // Update Title with Context
-        let title = "Topic History";
-        if (subtopicName && subtopicName !== 'null') title = subtopicName;
-        else if (topicName && topicName !== 'null') title = topicName;
-
-        document.getElementById('history-modal-title').innerText = title;
-        document.getElementById('history-modal-desc').innerText = `Review past sessions or start a new lesson for "${title}".`;
-
-    } catch (e) {
-        document.getElementById('history-list').innerHTML = '<p class="error">Failed to load history.</p>';
-        console.error(e);
-    }
-
-    // Attach event to Start Button
-    const startBtn = document.getElementById('start-new-lesson-btn');
-    startBtn.onclick = () => {
-        closeHistoryModal();
-        startATPLesson(topicId, subtopicId);
-    };
-};
-
-window.closeHistoryModal = function () {
-    const modal = document.getElementById('lesson-history-modal');
-    if (modal) modal.classList.remove('active');
-};
-
-function renderHistoryList(lessons) {
-    const list = document.getElementById('history-list');
-    if (!lessons || lessons.length === 0) {
-        list.innerHTML = '<p class="text-dim">No previous lessons found. Start your first one!</p>';
-        return;
-    }
-
-    list.innerHTML = lessons.map(l => {
-        const date = new Date(parseInt(l.lessonId.split('_')[1] || 0) * 1000).toLocaleDateString(); // ID based timestamp if available, else generic
-        // Simplify timestamp if ID is random hex:
-        const displayDate = l.created ? new Date(l.created).toLocaleDateString() : 'Previous Session';
-
-        return `
-            <div class="history-item" style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <strong style="color: var(--text-main); font-size: 0.9rem;">${displayDate}</strong>
-                    <p style="margin:0; font-size: 0.8rem; color: var(--text-dim);">${l.history.length} messages</p>
-                </div>
-                <button class="secondary-btn" onclick="resumeLesson('${l.lessonId}')" style="padding: 6px 12px; font-size: 0.8rem;">
-                    Resume
-                </button>
-            </div>
-        `;
-    }).join('');
-}
-
-// Updated Start Lesson
-window.startATPLesson = async function (topicId, subtopicId) {
-    const mainArea = document.querySelector('.main-dashboard');
-    mainArea.innerHTML = '<div style="padding: 40px; text-align: center;"><h2>Preparing your lesson... 🤖</h2><p>Analysisng curriculum context...</p></div>';
-
-    const email = cognitoUser.getUsername();
-    try {
-        const resp = await fetch(`${API_BASE}/lessons/start`, {
-            method: 'POST',
-            body: JSON.stringify({
-                email,
-                topicId,
-                subtopicId, // Pass the subtopic!
-                subjectName: currentProfile.activeSubject,
-                grade: currentProfile.grade
-            })
-        });
-        const lesson = await resp.json();
-        currentProfile.activeTopicId = topicId;
-        // topicName might not be passed to startATPLesson, let's ensure it is if possible
-        renderChatRoom(lesson);
-    } catch (e) {
-        alert("Failed to start lesson");
-        console.error(e);
-        renderDashboard(email); // Fallback
-    }
-};
-
-// --- End History Logic ---
-
-window.startNewLesson = async function (topicId) {
-    const email = cognitoUser.getUsername();
-    try {
-        const resp = await fetch(`${API_BASE}/lessons/start`, {
-            method: 'POST',
-            body: JSON.stringify({
-                email,
-                topicId,
-                subjectName: currentProfile.activeSubject
-            })
-        });
-        const lesson = await resp.json();
-        renderChatRoom(lesson);
-    } catch (e) {
-        alert("Failed to start lesson");
-    }
 };
 
 async function renderChatRoom(lesson, isReadOnly = false) {
     const mainArea = document.querySelector('.main-dashboard');
-    mainArea.classList.add('chat-active'); // Make UI static
+    mainArea.classList.add('chat-active');
 
     const isFinished = lesson.status === 'finished';
 
@@ -856,8 +711,13 @@ async function renderChatRoom(lesson, isReadOnly = false) {
         const box = document.getElementById('chat-messages');
         box.innerHTML = messagesHtml;
 
-        // Apply KaTeX rendering to all messages
-        renderMathInChat();
+        // Scroll to bottom first
+        box.scrollTop = box.scrollHeight;
+
+        // Delay math rendering to ensure DOM is fully painted
+        setTimeout(() => {
+            renderMathInChat();
+        }, 50);
 
         if (isFinished) {
             // Show finished state - input disabled, Take Test button visible
@@ -870,6 +730,10 @@ async function renderChatRoom(lesson, isReadOnly = false) {
             // Hide input area for read-only
             document.getElementById('chat-input-container').style.display = 'none';
             document.getElementById('finish-lesson-btn').style.display = 'none';
+            // Re-render math after adding recap message
+            setTimeout(() => {
+                renderMathInChat();
+            }, 50);
         } else {
             // Active lesson - attach event handlers
             document.getElementById('finish-lesson-btn').onclick = () => finishLesson(lesson.lessonId);
@@ -878,8 +742,6 @@ async function renderChatRoom(lesson, isReadOnly = false) {
             };
             document.getElementById('send-msg-btn').onclick = () => sendChatMessage(lesson.lessonId);
         }
-
-        box.scrollTop = box.scrollHeight;
 
         // Hide mobile footer for focused lesson
         const footer = document.querySelector('.mobile-footer');
@@ -937,26 +799,39 @@ window.exitChatRoom = function () {
 window.sendChatMessage = async function (lessonId) {
     const input = document.getElementById('chat-input');
     const msg = input.value.trim();
-    if (!msg) return;
+    const imgInput = document.getElementById('chat-img-input');
+    let imageData = null;
+
+    // Get image data BEFORE clearing the input
+    if (imgInput && imgInput.files.length > 0) {
+        imageData = await toBase64Resized(imgInput.files[0]);
+    }
+
+    if (!msg && !imageData) return;
 
     // 1. UI: Append User Message and Prepare AI Bubble
     const box = document.getElementById('chat-messages');
-    box.innerHTML += `<div class="message user">${msg}</div>`;
+    
+    // Show user message with image preview if present
+    let userMessageHtml = `<div class="message user">${msg}`;
+    if (imageData) {
+        userMessageHtml += `<div style="margin-top: 10px;"><img src="${imageData}" style="max-width: 200px; border-radius: 8px;"></div>`;
+    }
+    userMessageHtml += `</div>`;
+    box.innerHTML += userMessageHtml;
 
     const aiBubble = document.createElement('div');
     aiBubble.className = 'message ai';
-    aiBubble.innerText = '...'; // Placeholder while connecting
+    aiBubble.innerText = '...';
     box.appendChild(aiBubble);
 
     input.value = '';
     box.scrollTop = box.scrollHeight;
 
-    // 2. Fetch with Streaming Support (Multimodal)
-    const imgInput = document.getElementById('chat-img-input');
-    let imageData = null;
-
-    if (imgInput && imgInput.files.length > 0) {
-        imageData = await toBase64(imgInput.files[0]);
+    // Clear image input and preview immediately after reading
+    if (imgInput) {
+        imgInput.value = "";
+        document.getElementById('img-preview').style.display = 'none';
     }
 
     try {
@@ -966,35 +841,22 @@ window.sendChatMessage = async function (lessonId) {
             body: JSON.stringify({
                 message: msg,
                 lesson_id: lessonId,
-                image: imageData // Send image as base64
+                image: imageData
             })
         });
 
         if (!response.ok) throw new Error("Stream connection failed");
 
-        // Clear image state
-        if (imgInput) {
-            imgInput.value = "";
-            document.getElementById('img-preview').style.display = 'none';
-        }
-
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let aiContent = "";
-        aiBubble.innerText = ""; // Clear placeholder
+        aiBubble.innerText = "";
 
         while (true) {
             const { done, value } = await reader.read();
-            if (done) {
-                console.log("Stream complete");
-                break;
-            }
-
-            console.log("Received chunk size:", value.length);
+            if (done) break;
 
             const chunk = decoder.decode(value, { stream: true });
-            console.log("Chunk content:", chunk.substring(0, 500));
-
             const lines = chunk.split("\n");
 
             for (const line of lines) {
@@ -1005,19 +867,24 @@ window.sendChatMessage = async function (lessonId) {
                         const data = JSON.parse(dataStr);
                         if (data.error) throw new Error(data.error);
                         aiContent += data.text;
-                        aiBubble.innerText = aiContent; // Update UI in real-time
+                        aiBubble.innerHTML = formatMessageContent(aiContent);
+                        // Re-render math in real-time as content updates
+                        renderMathInChat();
                         box.scrollTop = box.scrollHeight;
-                    } catch (e) { /* partial JSON ignore */ }
+                    } catch (e) { }
                 } else if (line.trim().length > 0) {
-                    // Fallback: Display raw error/text if not SSE format
                     aiContent += line + "\n";
-                    aiBubble.innerText = aiContent;
+                    aiBubble.innerHTML = formatMessageContent(aiContent);
+                    renderMathInChat();
                     box.scrollTop = box.scrollHeight;
                 }
             }
         }
 
-        // 4. Update session history in main DB (Fire and forget or async)
+        // Final math render after stream completes
+        renderMathInChat();
+
+        // Update session history
         fetch(`${API_BASE}/lessons/chat`, {
             method: 'POST',
             body: JSON.stringify({ lessonId, message: msg, aiResponse: aiContent })
@@ -1028,6 +895,7 @@ window.sendChatMessage = async function (lessonId) {
         aiBubble.innerText = "Error: " + err.message;
     }
 };
+
 window.closeLesson = function () {
     const email = cognitoUser.getUsername();
     renderDashboard(email);
@@ -1171,11 +1039,14 @@ window.openAssessment = async function (lessonId) {
         // Store lessonId for later use
         currentProfile.activeAssessmentLessonId = lessonId;
 
-        // Generate test from AI
+        // Generate test from AI with lesson context
         const testRes = await fetch(`${GEMINI_API_URL}/generate-test`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ lesson_id: lessonId })
+            body: JSON.stringify({ 
+                lesson_id: lessonId,
+                timestamp: Date.now() // Force fresh test generation
+            })
         });
 
         if (!testRes.ok) {
@@ -1185,6 +1056,16 @@ window.openAssessment = async function (lessonId) {
 
         const testData = await testRes.json();
         const test = testData.test;
+
+        // Store the unique testId - CRITICAL for grading validation
+        if (testData.testId) {
+            currentProfile.activeTestId = testData.testId;
+            console.log("Test ID stored:", currentProfile.activeTestId);
+        } else {
+            console.warn("No testId received - grading will be unreliable");
+            // Generate a unique test ID client-side as fallback
+            currentProfile.activeTestId = `test_${lessonId}_${Date.now()}`;
+        }
 
         // Hide loading, show test
         document.getElementById('test-loading').style.display = 'none';
@@ -1261,8 +1142,7 @@ window.submitAssessment = async function (lessonId) {
     submitBtn.disabled = true;
 
     try {
-        // Convert image to base64
-        // Convert image to base64 with resizing (Max 1024px)
+        // Convert image to base64 with resizing
         const file = fileInput.files[0];
         const base64 = await new Promise((resolve) => {
             const reader = new FileReader();
@@ -1283,7 +1163,6 @@ window.submitAssessment = async function (lessonId) {
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    // Use JPEG 0.8 for good balance of size/quality
                     resolve(canvas.toDataURL('image/jpeg', 0.8));
                 };
                 img.src = e.target.result;
@@ -1291,13 +1170,15 @@ window.submitAssessment = async function (lessonId) {
             reader.readAsDataURL(file);
         });
 
-        // Call grading API
+        // Call grading API with explicit test context
         const res = await fetch(`${GEMINI_API_URL}/grade-image`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 lesson_id: lessonId,
-                image: base64
+                test_id: currentProfile.activeTestId,
+                image: base64,
+                timestamp: Date.now() // Prevent caching of old results
             })
         });
 
@@ -1425,6 +1306,33 @@ window.clearImage = function () {
     const preview = document.getElementById('img-preview');
     if (preview) preview.style.display = 'none';
 };
+
+const toBase64Resized = (file, maxWidth = 1024, quality = 0.8) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth) {
+                height *= maxWidth / width;
+                width = maxWidth;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+    };
+    reader.onerror = reject;
+});
 
 const toBase64 = file => new Promise((resolve, reject) => {
     const reader = new FileReader();
