@@ -51,6 +51,7 @@ terraform.tfstate.d/
 
 # Build and package directories
 gemini_build/
+backend/*.zip
 node_modules/
 dist/
 build/

@@ -1,9 +1,3 @@
-variable "gemini_api_key" {
-  description = "The Gemini API Key (provide via terraform.tfvars or -var flag)"
-  type        = string
-  sensitive   = true
-}
-
 data "archive_file" "lambda_zip" {
   type        = "zip"
   source_file = "../backend/process_user.py"
@@ -217,12 +211,6 @@ resource "aws_lambda_function" "gemini_api" {
       SSM_PARAMETER_NAME = "/smart-ai-tutor/gemini-api-key"
     }
   }
-}
-
-resource "aws_ssm_parameter" "gemini_key" {
-  name  = "/smart-ai-tutor/gemini-api-key"
-  type  = "SecureString"
-  value = var.gemini_api_key
 }
 
 resource "aws_lambda_permission" "gemini_url_permission" {
