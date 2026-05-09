@@ -1,7 +1,11 @@
 #!/bin/bash
 
+# Get the directory where the script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ROOT_DIR="$( dirname "$SCRIPT_DIR" )"
+
 # 1. Get the values from terraform output
-pushd ../terraform > /dev/null
+pushd "$ROOT_DIR/terraform" > /dev/null
 API_URL=$(terraform output -raw api_url)
 GEMINI_URL=$(terraform output -raw gemini_service_url)
 USER_POOL_ID=$(terraform output -raw user_pool_id)
@@ -14,53 +18,33 @@ if [ -z "$API_URL" ] || [ "$API_URL" == "null" ]; then
   exit 1
 fi
 
-# 2. Update the API_BASE and GEMINI_API_URL constants in app.js
-# Remove trailing slash from URLs if present
+# 2. Update the constants in src/config/constants.ts
 GEMINI_URL_CLEAN=${GEMINI_URL%/}
 API_URL_CLEAN=${API_URL%/}
-sed -i "s|const API_BASE = \".*\";|const API_BASE = \"$API_URL_CLEAN\";|" ../frontend/app.js
-sed -i "s|const GEMINI_API_URL = \".*\";|const GEMINI_API_URL = \"$GEMINI_URL_CLEAN\";|" ../frontend/app.js
 
-# 3. Update poolData in auth.js
-sed -i "s|UserPoolId: '.*'|UserPoolId: '$USER_POOL_ID'|" ../frontend/auth.js
-sed -i "s|ClientId: '.*'|ClientId: '$CLIENT_ID'|" ../frontend/auth.js
+cat <<EOF > "$ROOT_DIR/frontend/src/config/constants.ts"
+export const API_BASE = "$API_URL_CLEAN";
+export const GEMINI_API_URL = "$GEMINI_URL_CLEAN";
+export const COGNITO_USER_POOL_ID = "$USER_POOL_ID";
+export const COGNITO_CLIENT_ID = "$CLIENT_ID";
+EOF
 
-# 4. Handle Cognito Endpoint (PRODUCTION: undefined)
-sed -i "s|endpoint: '.*'|endpoint: undefined|" ../frontend/auth.js
+echo "✅ Frontend constants synchronized with Terraform outputs."
 
-echo "✅ Frontend synchronized with Terraform outputs."
-echo "   - API_URL: $API_URL"
-echo "   - Gemini Service URL: $GEMINI_URL"
-echo "   - UserPool: $USER_POOL_ID"
-echo "   - ClientId: $CLIENT_ID"
-echo "   - S3 Bucket: $S3_BUCKET"
+# 3. Build the Qwik Application
+pushd "$ROOT_DIR/frontend" > /dev/null
+echo "📦 Installing frontend dependencies..."
+npm install --silent
+echo "🏗 Building Qwik SSG application..."
+npm run build
+popd > /dev/null
 
-# 5. Sync to S3
+# 4. Sync to S3
 if [ ! -z "$S3_BUCKET" ] && [ "$S3_BUCKET" != "null" ]; then
-    echo "🚀 Syncing files to S3..."
-    aws s3 sync ../frontend s3://$S3_BUCKET \
+    echo "🚀 Syncing build output to S3..."
+    # Qwik SSG output is in dist/
+    aws s3 sync "$ROOT_DIR/frontend/dist" s3://$S3_BUCKET \
         --profile capaciti \
-        --exclude ".git/*" \
-        --exclude ".venv/*" \
-        --exclude ".terraform/*" \
-        --exclude "*.tf" \
-        --exclude "*.tfstate*" \
-        --exclude "*.hcl" \
-        --exclude "*.zip" \
-        --exclude "venv/*" \
-        --exclude "__pycache__/*" \
-        --exclude "*.py" \
-        --exclude "requirements.txt" \
-        --exclude "gemini_build/*" \
-        --exclude "README.md" \
-        --exclude "sync-api.sh" \
-        --exclude "task.md" \
-        --exclude "node_modules/*" \
-        --exclude "FET_ATPs_Organized/*" \
-        --exclude "extracted_atp_data.json" \
-        --exclude "response.json" \
-        --exclude "terraform.tfvars" \
-        --exclude ".gitignore" \
         --delete
     echo "✅ S3 Sync Complete."
 else
