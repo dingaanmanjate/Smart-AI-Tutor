@@ -28,6 +28,7 @@ export default component$(() => {
   });
 
   const handleLogin = $(() => {
+    if (!state.email || !state.password) return;
     state.loading = true;
     const authDetails = new AuthenticationDetails({
       Username: state.email,
@@ -44,8 +45,8 @@ export default component$(() => {
       onSuccess: () => {
         console.log("Authentication successful.");
         cognitoUser.getUserAttributes((err, attributes) => {
-          state.loading = false;
           if (err) {
+            state.loading = false;
             cognitoUser.signOut();
             alert("Error fetching user profile: " + err.message);
             return;
@@ -56,6 +57,7 @@ export default component$(() => {
           const selectedJob = state.role.toLowerCase();
 
           if (userJob !== selectedJob) {
+            state.loading = false;
             cognitoUser.signOut();
             alert(`Access Denied: You are registered as a ${userJob}, but trying to login as a ${selectedJob}.`);
             return;
@@ -138,12 +140,14 @@ export default component$(() => {
             placeholder="Email"
             value={state.email}
             onInput$={(e) => (state.email = (e.target as HTMLInputElement).value)}
+            onKeyDown$={(e) => e.key === "Enter" && handleLogin()}
           />
           <input
             type="password"
             placeholder="Password"
             value={state.password}
             onInput$={(e) => (state.password = (e.target as HTMLInputElement).value)}
+            onKeyDown$={(e) => e.key === "Enter" && handleLogin()}
           />
           <button class="primary-btn" onClick$={handleLogin} disabled={state.loading}>
             {state.loading ? "Signing In..." : "Sign In"}
@@ -173,12 +177,14 @@ export default component$(() => {
             placeholder="Email"
             value={state.email}
             onInput$={(e) => (state.email = (e.target as HTMLInputElement).value)}
+            onKeyDown$={(e) => e.key === "Enter" && handleSignUp()}
           />
           <input
             type="password"
             placeholder="Password"
             value={state.password}
             onInput$={(e) => (state.password = (e.target as HTMLInputElement).value)}
+            onKeyDown$={(e) => e.key === "Enter" && handleSignUp()}
           />
           <button class="primary-btn" onClick$={handleSignUp} disabled={state.loading}>
             {state.loading ? "Creating..." : "Create Learner Account"}
@@ -200,6 +206,7 @@ export default component$(() => {
             placeholder="6-digit code"
             value={state.verifyCode}
             onInput$={(e) => (state.verifyCode = (e.target as HTMLInputElement).value)}
+            onKeyDown$={(e) => e.key === "Enter" && handleVerify()}
           />
           <button class="primary-btn" onClick$={handleVerify} disabled={state.loading}>
             {state.loading ? "Verifying..." : "Confirm Email"}
