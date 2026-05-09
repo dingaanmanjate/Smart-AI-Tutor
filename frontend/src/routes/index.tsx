@@ -140,14 +140,18 @@ export default component$(() => {
             placeholder="Email"
             value={state.email}
             onInput$={(e) => (state.email = (e.target as HTMLInputElement).value)}
-            onKeyDown$={(e) => e.key === "Enter" && handleLogin()}
+            onKeyDown$={$(async (e) => {
+                if (e.key === "Enter") await handleLogin();
+            })}
           />
           <input
             type="password"
             placeholder="Password"
             value={state.password}
             onInput$={(e) => (state.password = (e.target as HTMLInputElement).value)}
-            onKeyDown$={(e) => e.key === "Enter" && handleLogin()}
+            onKeyDown$={$(async (e) => {
+                if (e.key === "Enter") await handleLogin();
+            })}
           />
           <button class="primary-btn" onClick$={handleLogin} disabled={state.loading}>
             {state.loading ? "Signing In..." : "Sign In"}
@@ -177,14 +181,18 @@ export default component$(() => {
             placeholder="Email"
             value={state.email}
             onInput$={(e) => (state.email = (e.target as HTMLInputElement).value)}
-            onKeyDown$={(e) => e.key === "Enter" && handleSignUp()}
+            onKeyDown$={$(async (e) => {
+                if (e.key === "Enter") await handleSignUp();
+            })}
           />
           <input
             type="password"
             placeholder="Password"
             value={state.password}
             onInput$={(e) => (state.password = (e.target as HTMLInputElement).value)}
-            onKeyDown$={(e) => e.key === "Enter" && handleSignUp()}
+            onKeyDown$={$(async (e) => {
+                if (e.key === "Enter") await handleSignUp();
+            })}
           />
           <button class="primary-btn" onClick$={handleSignUp} disabled={state.loading}>
             {state.loading ? "Creating..." : "Create Learner Account"}
@@ -206,7 +214,9 @@ export default component$(() => {
             placeholder="6-digit code"
             value={state.verifyCode}
             onInput$={(e) => (state.verifyCode = (e.target as HTMLInputElement).value)}
-            onKeyDown$={(e) => e.key === "Enter" && handleVerify()}
+            onKeyDown$={$(async (e) => {
+                if (e.key === "Enter") await handleVerify();
+            })}
           />
           <button class="primary-btn" onClick$={handleVerify} disabled={state.loading}>
             {state.loading ? "Verifying..." : "Confirm Email"}
