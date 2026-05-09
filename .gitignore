@@ -76,4 +76,5 @@ test_*.json
 # - *.json (Data files, excluding secrets)
 # - *.md (Documentation)
 # - *.txt (Requirements and config)
-FET_ATPs_Organized/
+# Curriculum data
+docs/FET_ATPs_Organized/

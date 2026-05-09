@@ -1,11 +1,13 @@
 #!/bin/bash
 
 # 1. Get the values from terraform output
+pushd ../terraform > /dev/null
 API_URL=$(terraform output -raw api_url)
 GEMINI_URL=$(terraform output -raw gemini_service_url)
 USER_POOL_ID=$(terraform output -raw user_pool_id)
 CLIENT_ID=$(terraform output -raw client_id)
 S3_BUCKET=$(terraform output -raw s3_bucket_name)
+popd > /dev/null
 
 if [ -z "$API_URL" ] || [ "$API_URL" == "null" ]; then
   echo "Error: Could not find outputs in terraform."
@@ -16,15 +18,15 @@ fi
 # Remove trailing slash from URLs if present
 GEMINI_URL_CLEAN=${GEMINI_URL%/}
 API_URL_CLEAN=${API_URL%/}
-sed -i "s|const API_BASE = \".*\";|const API_BASE = \"$API_URL_CLEAN\";|" app.js
-sed -i "s|const GEMINI_API_URL = \".*\";|const GEMINI_API_URL = \"$GEMINI_URL_CLEAN\";|" app.js
+sed -i "s|const API_BASE = \".*\";|const API_BASE = \"$API_URL_CLEAN\";|" ../frontend/app.js
+sed -i "s|const GEMINI_API_URL = \".*\";|const GEMINI_API_URL = \"$GEMINI_URL_CLEAN\";|" ../frontend/app.js
 
 # 3. Update poolData in auth.js
-sed -i "s|UserPoolId: '.*'|UserPoolId: '$USER_POOL_ID'|" auth.js
-sed -i "s|ClientId: '.*'|ClientId: '$CLIENT_ID'|" auth.js
+sed -i "s|UserPoolId: '.*'|UserPoolId: '$USER_POOL_ID'|" ../frontend/auth.js
+sed -i "s|ClientId: '.*'|ClientId: '$CLIENT_ID'|" ../frontend/auth.js
 
 # 4. Handle Cognito Endpoint (PRODUCTION: undefined)
-sed -i "s|endpoint: '.*'|endpoint: undefined|" auth.js
+sed -i "s|endpoint: '.*'|endpoint: undefined|" ../frontend/auth.js
 
 echo "✅ Frontend synchronized with Terraform outputs."
 echo "   - API_URL: $API_URL"
@@ -36,7 +38,7 @@ echo "   - S3 Bucket: $S3_BUCKET"
 # 5. Sync to S3
 if [ ! -z "$S3_BUCKET" ] && [ "$S3_BUCKET" != "null" ]; then
     echo "🚀 Syncing files to S3..."
-    aws s3 sync . s3://$S3_BUCKET \
+    aws s3 sync ../frontend s3://$S3_BUCKET \
         --profile capaciti \
         --exclude ".git/*" \
         --exclude ".venv/*" \

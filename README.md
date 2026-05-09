@@ -203,7 +203,7 @@ All services are configured to stay within AWS Free Tier limits for typical usag
 
 ```bash
 git clone https://github.com/dingaanmanjate/Smart-AI-Tutor.git
-cd Smart-AI-Tutor
+cd Smart-AI-Tutor/terraform
 
 # Create your secrets file (NEVER commit this)
 echo 'gemini_api_key = "YOUR_GEMINI_API_KEY"' > terraform.tfvars
@@ -223,14 +223,16 @@ terraform apply
 After deployment, update the frontend with the generated API endpoints:
 
 ```bash
+cd ../scripts
 ./sync-api.sh
 ```
 
 ### 4. Serve Locally
 
-Open `index.html` in a browser or use a local HTTP server:
+Open `frontend/index.html` in a browser or use a local HTTP server:
 
 ```bash
+cd ../frontend
 python3 -m http.server 8888
 # Navigate to http://localhost:8888
 ```
@@ -241,32 +243,39 @@ python3 -m http.server 8888
 
 ```
 Smart-AI-Tutor/
-├── index.html              # Login page
-├── dashboard.html          # Learner dashboard
-├── subject-portal.html     # ATP subject portal (read-only topics)
-├── chat-room.html          # AI chat interface
-├── assessment.html         # Test/assessment page
-├── style.css               # UI styles (dark theme)
-├── app.js                  # Core frontend logic
-├── auth.js                 # Cognito authentication
+├── frontend/               # UI components and client-side logic
+│   ├── index.html          # Login page
+│   ├── dashboard.html      # Learner dashboard
+│   ├── subject-portal.html # ATP subject portal
+│   ├── chat-room.html      # AI chat interface
+│   ├── assessment.html     # Test/assessment page
+│   ├── style.css           # UI styles (dark theme)
+│   ├── app.js              # Core frontend logic
+│   └── auth.js             # Cognito authentication
 │
-├── gemini_handler.py       # AI streaming Lambda (FastAPI + ATP context)
-├── profile_handler.py      # Profile/Subjects/Lessons/Curriculum Lambda
-├── process_user.py         # Cognito post-confirmation sync
+├── backend/                # Serverless functions (Lambda)
+│   ├── gemini_handler.py   # AI streaming Lambda (FastAPI + ATP context)
+│   ├── profile_handler.py  # Profile/Subjects/Lessons/Curriculum Lambda
+│   ├── process_user.py     # Cognito post-confirmation sync
+│   ├── package_gemini.py   # Builds Gemini Lambda zip
+│   └── requirements.txt    # Python dependencies
 │
-├── atp_parser.py           # Extracts curriculum from PPTX files
-├── seed_curriculum.py      # Seeds DynamoDB with ATP data
+├── terraform/              # Infrastructure as Code
+│   ├── cognito.tf          # Cognito User Pool config
+│   ├── lambda.tf           # Lambda + API Gateway + SSM
+│   ├── dynamo.tf           # DynamoDB tables
+│   ├── frontend.tf         # S3/CloudFront
+│   └── providers.tf        # AWS provider config
 │
-├── cognito.tf              # Cognito User Pool config
-├── lambda.tf               # Lambda + API Gateway + SSM
-├── dynamo.tf               # DynamoDB tables (6 tables)
-├── frontend.tf             # S3/CloudFront
-├── providers.tf            # AWS provider config
+├── scripts/                # Utility and data management scripts
+│   ├── sync-api.sh         # Script to inject API URLs
+│   ├── extract_atp_data.py # Curriculum extraction from PDF
+│   └── seed_curriculum.py  # Seeds DynamoDB with ATP data
 │
-├── sync-api.sh             # Script to inject API URLs
-├── package_gemini.py       # Builds Gemini Lambda zip
-├── requirements.txt        # Python dependencies
-└── .gitignore              # Excludes secrets, .terraform, etc.
+├── docs/                   # Documentation and raw curriculum data
+│   └── FET_ATPs_Organized/ # Official CAPS ATP PDFs
+│
+└── README.md
 ```
 
 ### DynamoDB Tables

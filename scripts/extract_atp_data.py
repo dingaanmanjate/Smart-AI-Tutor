@@ -262,7 +262,7 @@ def extract_text_from_pdf(pdf_path):
     return formatted_output
 
 def main():
-    root_dir = "FET_ATPs_Organized"
+    root_dir = "../docs/FET_ATPs_Organized"
     output_file = "extracted_atp_data.json"
     all_data = []
 

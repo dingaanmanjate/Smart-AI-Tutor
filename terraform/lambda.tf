@@ -6,26 +6,26 @@ variable "gemini_api_key" {
 
 data "archive_file" "lambda_zip" {
   type        = "zip"
-  source_file = "process_user.py"
-  output_path = "process_user.zip"
+  source_file = "../backend/process_user.py"
+  output_path = "../backend/process_user.zip"
 }
 
 # Build Gemini Lambda ensuring dependencies are packaged
 resource "null_resource" "build_gemini_lambda" {
   triggers = {
-    handler_hash = filebase64sha256("gemini_handler.py")
-    req_hash     = filebase64sha256("requirements.txt")
-    script_hash  = filebase64sha256("package_gemini.py")
+    handler_hash = filebase64sha256("../backend/gemini_handler.py")
+    req_hash     = filebase64sha256("../backend/requirements.txt")
+    script_hash  = filebase64sha256("../backend/package_gemini.py")
   }
 
   provisioner "local-exec" {
-    command = "python3 package_gemini.py"
+    command = "cd ../backend && python3 package_gemini.py"
   }
 }
 
 # Create the Lambda
 resource "aws_lambda_function" "sync_user" {
-  filename      = "process_user.zip"
+  filename      = "../backend/process_user.zip"
   function_name = "PostConfirmationSync"
   role          = aws_iam_role.lambda_role.arn
   handler       = "process_user.lambda_handler"
@@ -95,12 +95,12 @@ resource "aws_iam_role_policy" "lambda_policy" {
 
 data "archive_file" "profile_zip" {
   type        = "zip"
-  source_file = "profile_handler.py"
-  output_path = "profile_handler.zip"
+  source_file = "../backend/profile_handler.py"
+  output_path = "../backend/profile_handler.zip"
 }
 
 resource "aws_lambda_function" "profile_api" {
-  filename      = "profile_handler.zip"
+  filename      = "../backend/profile_handler.zip"
   function_name = "ProfileAPI"
   role          = aws_iam_role.lambda_role.arn
   handler       = "profile_handler.lambda_handler"
@@ -201,7 +201,7 @@ output "api_url" {
 
 resource "aws_lambda_function" "gemini_api" {
   depends_on    = [null_resource.build_gemini_lambda]
-  filename      = "gemini_handler.zip"
+  filename      = "../backend/gemini_handler.zip"
   function_name = "GeminiTutorAPI"
   role          = aws_iam_role.lambda_role.arn
   handler       = "gemini_handler.handler" # Mangum handler
@@ -209,7 +209,7 @@ resource "aws_lambda_function" "gemini_api" {
   memory_size   = 1024
   timeout       = 300 
 
-  source_code_hash = filebase64sha256("gemini_handler.zip")
+  source_code_hash = filebase64sha256("../backend/gemini_handler.zip")
 
   environment {
     variables = {
