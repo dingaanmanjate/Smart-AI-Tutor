@@ -11,6 +11,7 @@ GEMINI_URL=$(terraform output -raw gemini_service_url)
 USER_POOL_ID=$(terraform output -raw user_pool_id)
 CLIENT_ID=$(terraform output -raw client_id)
 S3_BUCKET=$(terraform output -raw s3_bucket_name)
+DIST_ID=$(terraform output -raw cloudfront_distribution_id)
 popd > /dev/null
 
 if [ -z "$API_URL" ] || [ "$API_URL" == "null" ]; then
@@ -47,6 +48,15 @@ if [ ! -z "$S3_BUCKET" ] && [ "$S3_BUCKET" != "null" ]; then
         --profile capaciti \
         --delete
     echo "✅ S3 Sync Complete."
+
+    if [ ! -z "$DIST_ID" ] && [ "$DIST_ID" != "null" ]; then
+        echo "🧹 Invalidating CloudFront cache..."
+        aws cloudfront create-invalidation \
+            --distribution-id "$DIST_ID" \
+            --paths "/*" \
+            --profile capaciti > /dev/null
+        echo "✅ CloudFront Invalidation Started."
+    fi
 else
     echo "⚠️  S3 Bucket not found, skipping sync."
 fi
