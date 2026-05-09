@@ -21,7 +21,7 @@ export default component$(() => {
     if (user) {
       user.getSession((err: any, session: any) => {
         if (!err && session.isValid()) {
-          nav("/dashboard");
+          nav("/app/dashboard");
         }
       });
     }
@@ -63,7 +63,7 @@ export default component$(() => {
             return;
           }
 
-          nav("/dashboard");
+          nav("/app/dashboard");
         });
       },
       onFailure: (err) => {
