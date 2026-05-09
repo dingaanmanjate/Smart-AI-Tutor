@@ -15,6 +15,7 @@ export default component$(() => {
   });
 
   // Check if already logged in
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(() => {
     const user = userPool.getCurrentUser();
     if (user) {

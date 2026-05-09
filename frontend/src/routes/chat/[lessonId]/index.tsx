@@ -47,6 +47,7 @@ export default component$(() => {
   });
 
   // Initial Load
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(async () => {
     try {
       const resp = await fetch(`${API_BASE}/lessons/${lessonId}`);
@@ -176,7 +177,7 @@ export default component$(() => {
               <div dangerouslySetInnerHTML={DOMPurify.sanitize(marked.parse(m.content) as string)} />
               {m.image && (
                 <div style={{ marginTop: "10px" }}>
-                  <img src={m.image} style={{ maxWidth: "200px", borderRadius: "8px" }} />
+                  <img src={m.image} width="200" height="200" style={{ maxWidth: "200px", borderRadius: "8px", objectFit: "contain" }} />
                 </div>
               )}
             </div>
@@ -187,7 +188,7 @@ export default component$(() => {
         {state.imageData && (
           <div class="img-preview-area">
             <div class="preview-thumb">
-              <img src={state.imageData} />
+              <img src={state.imageData} width="60" height="60" style={{ objectFit: "cover" }} />
               <button class="remove-preview" onClick$={() => (state.imageData = null)}>×</button>
             </div>
           </div>

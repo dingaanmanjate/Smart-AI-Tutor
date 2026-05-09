@@ -4,7 +4,7 @@ import { userPool } from "../../lib/cognito";
 
 export default component$(() => {
   const state = useStore({
-    firstName: "Name",
+    name: "Name",
     surname: "Surname",
     curriculum: "Curriculum",
     grade: "Grade",
@@ -13,6 +13,7 @@ export default component$(() => {
     loading: true,
   });
 
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(async () => {
     const user = userPool.getCurrentUser();
     if (!user) return;
@@ -22,11 +23,11 @@ export default component$(() => {
       const profileResp = await fetch(`${API_BASE}/profile?email=${encodeURIComponent(email)}`);
       const profile = await profileResp.json();
       
-      state.firstName = profile.firstName || "Name";
+      state.name = profile.name || "Name";
       state.surname = profile.surname || "Surname";
       state.curriculum = profile.curriculum || "Curriculum";
       state.grade = profile.grade || "Grade";
-      state.profileComplete = !!profile.firstName;
+      state.profileComplete = !!profile.name;
 
       // Fetch Stats
       const statsResp = await fetch(`${API_BASE}/stats?email=${encodeURIComponent(email)}`);
@@ -54,13 +55,13 @@ export default component$(() => {
         <div class="profile-card-new">
           <div class="profile-img-container">
             <div id="profile-initials" class="profile-initials">
-              {state.firstName[0]}
+              {state.name[0]}
               {state.surname[0]}
             </div>
             <div class="profile-img-overlay">📷</div>
           </div>
           <div class="profile-info">
-            <h1 id="prof-full-name">{state.firstName} {state.surname}</h1>
+            <h1 id="prof-full-name">{state.name} {state.surname}</h1>
             <p id="prof-curriculum">{state.curriculum}</p>
             <p id="prof-grade">{state.grade}</p>
             <p class="profile-quote">"The future belongs in those who believe in the beauty of their dreams."</p>

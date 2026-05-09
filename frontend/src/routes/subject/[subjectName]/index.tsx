@@ -23,6 +23,7 @@ export default component$(() => {
     userEmail: "",
   });
 
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(async () => {
     const user = userPool.getCurrentUser();
     if (!user) {

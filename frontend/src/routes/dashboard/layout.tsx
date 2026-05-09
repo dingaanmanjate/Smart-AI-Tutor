@@ -19,6 +19,7 @@ export default component$(() => {
     nav("/");
   });
 
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(async () => {
     const user = userPool.getCurrentUser();
     if (!user) {
@@ -31,9 +32,9 @@ export default component$(() => {
       const profileResp = await fetch(`${API_BASE}/profile?email=${encodeURIComponent(email)}`);
       const profile = await profileResp.json();
       
-      state.userName = profile.firstName || "Learner";
+      state.userName = profile.name || "Learner";
       state.curriculum = profile.curriculum || "CAPS";
-      state.enrolledSubjects = profile.enrolledSubjects || [];
+      state.enrolledSubjects = profile.subjects || [];
 
       // Fetch available subjects for enrollment
       const subjectsResp = await fetch(`${API_BASE}/subjects?curriculum=${state.curriculum}`);

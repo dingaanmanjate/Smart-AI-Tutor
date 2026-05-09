@@ -41,6 +41,7 @@ export default component$(() => {
     }
   });
 
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(async () => {
     try {
       const testRes = await fetch(`${GEMINI_API_URL}/generate-test`, {
@@ -91,12 +92,13 @@ export default component$(() => {
       state.isSubmitting = false;
       
       // Update backend stats
-      fetch(`${API_BASE}/lessons/grade`, {
+      fetch(`${API_BASE}/lessons/score`, {
           method: "POST",
           body: JSON.stringify({
               lessonId,
               score: state.result.total_score,
-              feedback: state.result.overall_feedback
+              feedback: state.result.overall_feedback,
+              solution: state.result.model_solution
           })
       }).catch(err => console.warn("Grade sync failed", err));
 
@@ -153,7 +155,7 @@ export default component$(() => {
 
             {state.imageData && (
               <div style={{ marginTop: "15px" }}>
-                <img src={state.imageData} style={{ maxWidth: "100%", maxHeight: "200px", border: "1px solid var(--border-main)" }} />
+                <img src={state.imageData} width="400" height="200" style={{ maxWidth: "100%", maxHeight: "200px", border: "1px solid var(--border-main)", objectFit: "contain" }} />
                 <button class="primary-btn" style={{ marginTop: "15px", width: "100%" }} onClick$={handleSubmit} disabled={state.isSubmitting}>
                   {state.isSubmitting ? "Grading..." : "SUBMIT FOR GRADING"}
                 </button>
